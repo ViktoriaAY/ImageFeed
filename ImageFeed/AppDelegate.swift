@@ -4,7 +4,6 @@
 //
 //  Created by Виктория Юношева on 28.05.2026.
 //
-
 import UIKit
 
 @main
