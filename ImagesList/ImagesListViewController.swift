@@ -24,7 +24,9 @@ final class ImagesListViewController: UIViewController {
 }
 
 extension ImagesListViewController: UITableViewDelegate {
-    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) { }
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        // TODO: Реализация в следующих спринтах
+    }
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         let imageName = imagesName[indexPath.row]
@@ -32,6 +34,9 @@ extension ImagesListViewController: UITableViewDelegate {
             return 0
         }
         let imageWidth = image.size.width
+        guard imageWidth > 0 else {
+            return 0
+        }
         let imageViewWidth = tableView.bounds.width
         let scale = imageViewWidth / imageWidth
         let imageHeight = image.size.height
