@@ -20,13 +20,56 @@
                                 <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                                 <color key="backgroundColor" name="YP Background (iOS)"/>
                                 <prototypes>
-                                    <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" selectionStyle="blue" hidesAccessoryWhenEditing="NO" indentationLevel="1" indentationWidth="0.0" id="AYv-N3-UPg">
-                                        <rect key="frame" x="0.0" y="50" width="393" height="52"/>
+                                    <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" selectionStyle="blue" hidesAccessoryWhenEditing="NO" indentationLevel="1" indentationWidth="0.0" reuseIdentifier="ImagesListCell" rowHeight="183" id="AYv-N3-UPg" customClass="ImagesListCell" customModule="ImageFeed" customModuleProvider="target">
+                                        <rect key="frame" x="0.0" y="50" width="393" height="183"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="AYv-N3-UPg" id="hwp-U1-i0x">
-                                            <rect key="frame" x="0.0" y="0.0" width="393" height="52"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="393" height="183"/>
                                             <autoresizingMask key="autoresizingMask"/>
+                                            <subviews>
+                                                <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="0" translatesAutoresizingMaskIntoConstraints="NO" id="VUb-hb-CcJ" userLabel="cellImageView">
+                                                    <rect key="frame" x="16" y="4" width="361" height="175"/>
+                                                    <userDefinedRuntimeAttributes>
+                                                        <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
+                                                            <integer key="value" value="16"/>
+                                                        </userDefinedRuntimeAttribute>
+                                                        <userDefinedRuntimeAttribute type="boolean" keyPath="layer.masks" value="YES"/>
+                                                    </userDefinedRuntimeAttributes>
+                                                </imageView>
+                                                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="GLS-yZ-bR1" userLabel="likeButton">
+                                                    <rect key="frame" x="333" y="4" width="44" height="44"/>
+                                                    <constraints>
+                                                        <constraint firstAttribute="width" constant="44" id="VBM-SH-hJt"/>
+                                                        <constraint firstAttribute="height" constant="44" id="j2E-4k-J01"/>
+                                                    </constraints>
+                                                    <state key="normal" title="Button"/>
+                                                    <buttonConfiguration key="configuration" style="plain" image="YesLikeImage"/>
+                                                </button>
+                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="27 августа 2022" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="EH9-5A-iK3" userLabel="dateLabel">
+                                                    <rect key="frame" x="24.000000000000007" y="155.33333333333334" width="101.66666666666669" height="15.666666666666657"/>
+                                                    <fontDescription key="fontDescription" type="system" pointSize="13"/>
+                                                    <color key="textColor" name="YP White (iOS)"/>
+                                                    <nil key="highlightedColor"/>
+                                                </label>
+                                            </subviews>
+                                            <color key="backgroundColor" name="YP Black (iOS) "/>
+                                            <constraints>
+                                                <constraint firstItem="VUb-hb-CcJ" firstAttribute="top" secondItem="hwp-U1-i0x" secondAttribute="top" constant="4" id="0GU-og-gLz"/>
+                                                <constraint firstItem="GLS-yZ-bR1" firstAttribute="top" secondItem="VUb-hb-CcJ" secondAttribute="top" id="8MZ-va-cxv"/>
+                                                <constraint firstAttribute="trailing" secondItem="VUb-hb-CcJ" secondAttribute="trailing" constant="16" id="Ed1-26-Eyk"/>
+                                                <constraint firstItem="VUb-hb-CcJ" firstAttribute="leading" secondItem="hwp-U1-i0x" secondAttribute="leading" constant="16" id="Kbk-jv-hT0"/>
+                                                <constraint firstAttribute="bottom" secondItem="VUb-hb-CcJ" secondAttribute="bottom" constant="4" id="Ptu-Db-dLP"/>
+                                                <constraint firstItem="VUb-hb-CcJ" firstAttribute="bottom" secondItem="EH9-5A-iK3" secondAttribute="bottom" constant="8" id="apW-RS-v7Z"/>
+                                                <constraint firstItem="EH9-5A-iK3" firstAttribute="leading" secondItem="VUb-hb-CcJ" secondAttribute="leading" constant="8.0000000000000071" id="ciI-h3-NBg"/>
+                                                <constraint firstItem="VUb-hb-CcJ" firstAttribute="trailing" secondItem="GLS-yZ-bR1" secondAttribute="trailing" id="tUf-d8-amF"/>
+                                                <constraint firstItem="VUb-hb-CcJ" firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="EH9-5A-iK3" secondAttribute="trailing" constant="8" id="yoO-Wd-cbQ"/>
+                                            </constraints>
                                         </tableViewCellContentView>
+                                        <connections>
+                                            <outlet property="cellImageView" destination="VUb-hb-CcJ" id="Acq-5G-yEh"/>
+                                            <outlet property="dateLabel" destination="EH9-5A-iK3" id="7ij-ur-N0k"/>
+                                            <outlet property="likeButton" destination="GLS-yZ-bR1" id="Ojb-kV-e5z"/>
+                                        </connections>
                                     </tableViewCell>
                                 </prototypes>
                             </tableView>
@@ -46,15 +89,20 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="141" y="131"/>
+            <point key="canvasLocation" x="139.69465648854961" y="130.98591549295776"/>
         </scene>
     </scenes>
     <resources>
+        <image name="0" width="1600" height="1059"/>
+        <image name="YesLikeImage" width="44" height="44"/>
         <namedColor name="YP Background (iOS)">
             <color red="0.10196078431372549" green="0.10588235294117647" blue="0.13333333333333333" alpha="0.5" colorSpace="custom" customColorSpace="sRGB"/>
         </namedColor>
         <namedColor name="YP Black (iOS) ">
             <color red="0.10196078431372549" green="0.10588235294117647" blue="0.13333333333333333" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
+        <namedColor name="YP White (iOS)">
+            <color red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </namedColor>
     </resources>
 </document>
