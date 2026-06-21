@@ -24,9 +24,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		9B9B7E922FDA0CA500214035 /* ImageFeed.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = ImageFeed.app; path = "/Users/viktoriaunoseva/Desktop/ImageFeed/build/Debug-iphoneos/ImageFeed.app"; sourceTree = "<absolute>"; };
-		9B9B7E932FDA0CA500214035 /* ImageFeedTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; name = ImageFeedTests.xctest; path = "/Users/viktoriaunoseva/Desktop/ImageFeed/build/Debug-iphoneos/ImageFeed.app/PlugIns/ImageFeedTests.xctest"; sourceTree = "<absolute>"; };
-		9B9B7E942FDA0CA500214035 /* ImageFeedUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; name = ImageFeedUITests.xctest; path = "/Users/viktoriaunoseva/Desktop/ImageFeed/build/Debug-iphoneos/ImageFeedUITests-Runner.app/PlugIns/ImageFeedUITests.xctest"; sourceTree = "<absolute>"; };
+		9B8A88492FE7250800B0C315 /* ImageFeed.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ImageFeed.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		9B8A884A2FE7250800B0C315 /* ImageFeedTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ImageFeedTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		9B8A884B2FE7250800B0C315 /* ImageFeedUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ImageFeedUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -99,6 +99,9 @@
 			isa = PBXGroup;
 			children = (
 				9B19C2D82FC879B4000CC6B8 /* ImageFeed */,
+				9B8A88492FE7250800B0C315 /* ImageFeed.app */,
+				9B8A884A2FE7250800B0C315 /* ImageFeedTests.xctest */,
+				9B8A884B2FE7250800B0C315 /* ImageFeedUITests.xctest */,
 			);
 			sourceTree = "<group>";
 		};
@@ -124,7 +127,7 @@
 			packageProductDependencies = (
 			);
 			productName = ImageFeed;
-			productReference = 9B9B7E922FDA0CA500214035 /* ImageFeed.app */;
+			productReference = 9B8A88492FE7250800B0C315 /* ImageFeed.app */;
 			productType = "com.apple.product-type.application";
 		};
 		9B19C2EB2FC879B5000CC6B8 /* ImageFeedTests */ = {
@@ -144,7 +147,7 @@
 			packageProductDependencies = (
 			);
 			productName = ImageFeedTests;
-			productReference = 9B9B7E932FDA0CA500214035 /* ImageFeedTests.xctest */;
+			productReference = 9B8A884A2FE7250800B0C315 /* ImageFeedTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 		9B19C2F52FC879B5000CC6B8 /* ImageFeedUITests */ = {
@@ -164,7 +167,7 @@
 			packageProductDependencies = (
 			);
 			productName = ImageFeedUITests;
-			productReference = 9B9B7E942FDA0CA500214035 /* ImageFeedUITests.xctest */;
+			productReference = 9B8A884B2FE7250800B0C315 /* ImageFeedUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
