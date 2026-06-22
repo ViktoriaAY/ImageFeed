@@ -37,9 +37,9 @@
                                                     </userDefinedRuntimeAttributes>
                                                 </imageView>
                                                 <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="GLS-yZ-bR1" userLabel="likeButton">
-                                                    <rect key="frame" x="309" y="4" width="68" height="44"/>
+                                                    <rect key="frame" x="333" y="4" width="44" height="44"/>
                                                     <constraints>
-                                                        <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="44" id="VBM-SH-hJt"/>
+                                                        <constraint firstAttribute="width" constant="44" id="gsc-ls-vhj"/>
                                                         <constraint firstAttribute="height" constant="44" id="j2E-4k-J01"/>
                                                     </constraints>
                                                     <state key="normal" title="Button"/>
@@ -56,13 +56,13 @@
                                             <constraints>
                                                 <constraint firstItem="VUb-hb-CcJ" firstAttribute="top" secondItem="hwp-U1-i0x" secondAttribute="top" constant="4" id="0GU-og-gLz"/>
                                                 <constraint firstItem="GLS-yZ-bR1" firstAttribute="top" secondItem="VUb-hb-CcJ" secondAttribute="top" id="8MZ-va-cxv"/>
-                                                <constraint firstItem="GLS-yZ-bR1" firstAttribute="leading" secondItem="hwp-U1-i0x" secondAttribute="leading" constant="309" id="AxI-iK-6uf"/>
                                                 <constraint firstAttribute="trailing" secondItem="VUb-hb-CcJ" secondAttribute="trailing" constant="16" id="Ed1-26-Eyk"/>
                                                 <constraint firstItem="VUb-hb-CcJ" firstAttribute="leading" secondItem="hwp-U1-i0x" secondAttribute="leading" constant="16" id="Kbk-jv-hT0"/>
                                                 <constraint firstAttribute="bottom" secondItem="VUb-hb-CcJ" secondAttribute="bottom" constant="4" id="Ptu-Db-dLP"/>
                                                 <constraint firstItem="VUb-hb-CcJ" firstAttribute="bottom" secondItem="EH9-5A-iK3" secondAttribute="bottom" constant="8" id="apW-RS-v7Z"/>
                                                 <constraint firstItem="EH9-5A-iK3" firstAttribute="leading" secondItem="VUb-hb-CcJ" secondAttribute="leading" constant="8.0000000000000071" id="ciI-h3-NBg"/>
-                                                <constraint firstItem="VUb-hb-CcJ" firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="GLS-yZ-bR1" secondAttribute="trailing" id="tUf-d8-amF"/>
+                                                <constraint firstItem="GLS-yZ-bR1" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="hwp-U1-i0x" secondAttribute="leading" constant="20" symbolic="YES" id="obl-rs-XAK"/>
+                                                <constraint firstItem="VUb-hb-CcJ" firstAttribute="trailing" secondItem="GLS-yZ-bR1" secondAttribute="trailing" id="tUf-d8-amF"/>
                                                 <constraint firstItem="VUb-hb-CcJ" firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="EH9-5A-iK3" secondAttribute="trailing" constant="8" id="yoO-Wd-cbQ"/>
                                             </constraints>
                                         </tableViewCellContentView>

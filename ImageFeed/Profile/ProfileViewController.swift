@@ -1,5 +1,6 @@
 import UIKit
 
+// MARK: - Constants
 enum Constants {
     enum ProfileView {
         static let name = "Екатерина Новикова"
@@ -12,6 +13,9 @@ enum Constants {
 }
 
 final class ProfileViewController: UIViewController {
+    
+    // MARK: - UI Elements
+    
     let profileImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.image = UIImage(named: Constants.ProfileView.imageName)
@@ -53,11 +57,14 @@ final class ProfileViewController: UIViewController {
     }()
     
     // MARK: - Lifecycle
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         setupView()
         setupConstraints()
     }
+    
+    // MARK: - Setup UI
     
     private func setupView() {
         view.backgroundColor = UIColor(named: Constants.ProfileView.backgroundColor)

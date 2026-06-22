@@ -3,18 +3,25 @@ import UIKit
 final class SingleImageViewController: UIViewController {
     
     // MARK: - IBOutlets
-    @IBOutlet private var singleImage: UIImageView!
-    @IBOutlet private var scrollView: UIScrollView!
+    
+    @IBOutlet private weak var singleImage: UIImageView!
+    @IBOutlet private weak var scrollView: UIScrollView!
     
     
     // MARK: - Properties
     var image: UIImage?
     
+    // MARK: - Lifecycle
+    
     override func viewDidLoad() {
         super.viewDidLoad()
+        setupScrollView()
+        configureImageScaling()
+    }
+    
+    private func setupScrollView() {
         scrollView.minimumZoomScale = 0.1
         scrollView.maximumZoomScale = 1.25
-        configureImageScaling()
     }
     
     // MARK: - IBAction
@@ -31,7 +38,7 @@ final class SingleImageViewController: UIViewController {
         present(activityViewController, animated: true, completion: nil)
     }
     
-    // MARK: - private func
+    // MARK: - Private Methods
     private func configureImageScaling() {
         guard let image else { return }
         singleImage.image = image
@@ -65,6 +72,7 @@ final class SingleImageViewController: UIViewController {
         centerImageInsideScrollView()
     }
 }
+// MARK: - UIScrollViewDelegate
 
 extension SingleImageViewController: UIScrollViewDelegate {
     func viewForZooming(in scrollView: UIScrollView) -> UIView? {

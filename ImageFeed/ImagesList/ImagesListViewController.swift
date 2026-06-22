@@ -8,40 +8,44 @@ final class ImagesListViewController: UIViewController {
     
     
     // MARK: - Properties
-    private let imagesName: [String] = Array(0..<20).map{ "\($0)" }
+    private let imagesName = (0..<20).map(String.init)
+    private let showSingleImageSegueIdentifier = "ShowSingleImage"
     private lazy var dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateStyle = .long
         formatter.timeStyle = .none
         return formatter
     }()
-    private let showSingleImageSegueIdentifier = "ShowSingleImage"
     
+    // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
-        tableView.delegate = self
-        tableView.dataSource = self
-        tableView.rowHeight = 200
-        tableView.contentInset = UIEdgeInsets(top: 12, left: 0, bottom: 12, right: 0)
+        setupTableView()
     }
     
+    private func setupTableView() {
+        tableView.delegate = self
+        tableView.dataSource = self
+        tableView.contentInset = UIEdgeInsets(top: 12, left: 0, bottom: 12, right: 0)
+    }
     //подготовка данных перед переходом на новый экран
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        if segue.identifier == showSingleImageSegueIdentifier {
-            guard
-                let viewController = segue.destination as? SingleImageViewController,
-                let indexPath = sender as? IndexPath
-            else {
-                assertionFailure("Invalid segue destination")
-                return
-            }
-            let image = UIImage(named: imagesName[indexPath.row])
-            viewController.image = image
-        } else {
-            super.prepare(for: segue, sender: sender)
+        guard segue.identifier == showSingleImageSegueIdentifier else { super.prepare(for: segue, sender: sender)
+            return
         }
+        guard
+            let viewController = segue.destination as? SingleImageViewController,
+            let indexPath = sender as? IndexPath
+        else {
+            assertionFailure("Invalid segue destination")
+            return
+        }
+        viewController.image = UIImage(
+            named: imagesName[indexPath.row]
+        )
     }
 }
+// MARK: - UITableViewDelegate
 
 extension ImagesListViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
@@ -63,6 +67,8 @@ extension ImagesListViewController: UITableViewDelegate {
         return imageHeight * scale
     }
 }
+
+// MARK: - UITableViewDataSource
 
 extension ImagesListViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
