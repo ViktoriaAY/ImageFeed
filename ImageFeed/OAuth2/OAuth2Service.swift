@@ -4,10 +4,13 @@ import Foundation
 
 struct OAuthTokenResponseBody: Decodable {
     let accessToken: String
-    
-    enum CodingKeys: String, CodingKey {
-        case accessToken = "access_token"
-    }
+}
+
+enum HTTPMethod: String {
+    case get = "GET"
+    case post = "POST"
+    case put = "PUT"
+    case delete = "DELETE"
 }
 
 // MARK: - OAuth2Service
@@ -18,6 +21,11 @@ final class OAuth2Service {
     
     static let shared = OAuth2Service()
     private var authToken: String?
+    private let decoder: JSONDecoder = {
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        return decoder
+    }()
     
     // MARK: - Init
     
@@ -43,13 +51,11 @@ final class OAuth2Service {
             switch result {
             case .success(let data):
                 do {
-                    let decoder = JSONDecoder()
-                    let responseBody = try decoder.decode(OAuthTokenResponseBody.self, from: data)
+                    let responseBody = try self.decoder.decode(OAuthTokenResponseBody.self, from: data)
                     
                     print("TOKEN =", responseBody.accessToken)
                     self.authToken = responseBody.accessToken
                     
-                    // Расширение URLSession уже гарантирует главный поток
                     completion(.success(responseBody.accessToken))
                 } catch {
                     print("DECODE ERROR:", error)
@@ -74,7 +80,7 @@ final class OAuth2Service {
         }
         
         var request = URLRequest(url: url)
-        request.httpMethod = "POST"
+        request.httpMethod = HTTPMethod.post.rawValue
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
         
         var bodyComponents = URLComponents()
