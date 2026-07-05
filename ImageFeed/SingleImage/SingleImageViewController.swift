@@ -19,11 +19,6 @@ final class SingleImageViewController: UIViewController {
         configureImageScaling()
     }
     
-    private func setupScrollView() {
-        scrollView.minimumZoomScale = 0.1
-        scrollView.maximumZoomScale = 1.25
-    }
-    
     // MARK: - IBAction
     @IBAction private func didTapBackButton() {
         dismiss(animated: true, completion: nil)
@@ -39,6 +34,11 @@ final class SingleImageViewController: UIViewController {
     }
     
     // MARK: - Private Methods
+    
+    private func setupScrollView() {
+        scrollView.minimumZoomScale = 0.1
+        scrollView.maximumZoomScale = 1.25
+    }
     private func configureImageScaling() {
         guard let image else { return }
         singleImage.image = image
