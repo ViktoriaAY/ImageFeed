@@ -1,7 +1,7 @@
 import UIKit
 
 // MARK: - Constants
-enum Constants {
+enum ConstantProfileView{
     enum ProfileView {
         static let name = "Екатерина Новикова"
         static let nickname = "@ekaterina_nov"
@@ -18,7 +18,7 @@ final class ProfileViewController: UIViewController {
     
     let profileImageView: UIImageView = {
         let imageView = UIImageView()
-        imageView.image = UIImage(named: Constants.ProfileView.imageName)
+        imageView.image = UIImage(named: ConstantProfileView.ProfileView.imageName)
         imageView.contentMode = .scaleAspectFill
         imageView.clipsToBounds = true
         imageView.layer.cornerRadius = 35
@@ -27,7 +27,7 @@ final class ProfileViewController: UIViewController {
     
     let nameProfile: UILabel = {
         let label = UILabel()
-        label.text = Constants.ProfileView.name
+        label.text = ConstantProfileView.ProfileView.name
         label.textColor = .ypWhiteIOS
         label.font = UIFont.systemFont(ofSize: 23, weight: .bold)
         return label
@@ -35,7 +35,7 @@ final class ProfileViewController: UIViewController {
     
     let loginNameLabel: UILabel = {
         let label2 = UILabel()
-        label2.text = Constants.ProfileView.nickname
+        label2.text = ConstantProfileView.ProfileView.nickname
         label2.textColor = .ypGrayIOS
         label2.font = UIFont.systemFont(ofSize: 13, weight: .regular)
         return label2
@@ -43,7 +43,7 @@ final class ProfileViewController: UIViewController {
     
     let descriptionLabel: UILabel = {
         let label3 = UILabel()
-        label3.text = Constants.ProfileView.description
+        label3.text = ConstantProfileView.ProfileView.description
         label3.textColor = .ypWhiteIOS
         label3.font = UIFont.systemFont(ofSize: 13, weight: .regular)
         return label3
@@ -51,7 +51,7 @@ final class ProfileViewController: UIViewController {
     
     lazy var logoutButton: UIButton = {
         let button = UIButton()
-        let logoutImage = UIImage(named: Constants.ProfileView.logoutImage)
+        let logoutImage = UIImage(named: ConstantProfileView.ProfileView.logoutImage)
         button.setImage(logoutImage, for: .normal)
         return button
     }()
@@ -67,7 +67,7 @@ final class ProfileViewController: UIViewController {
     // MARK: - Setup UI
     
     private func setupView() {
-        view.backgroundColor = UIColor(named: Constants.ProfileView.backgroundColor)
+        view.backgroundColor = UIColor(named: ConstantProfileView.ProfileView.backgroundColor)
         view.addSubview(profileImageView)
         view.addSubview(nameProfile)
         view.addSubview(loginNameLabel)
