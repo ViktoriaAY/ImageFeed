@@ -2,7 +2,7 @@ import Foundation
 
 // MARK: - Models
 
-struct OAuthTokenResponseBody: Decodable {
+private struct OAuthTokenResponseBody: Decodable {
     let accessToken: String
 }
 
@@ -21,6 +21,8 @@ final class OAuth2Service {
     
     static let shared = OAuth2Service()
     private var authToken: String?
+    private var lastCode: String?
+    private var task: URLSessionTask?
     private let decoder: JSONDecoder = {
         let decoder = JSONDecoder()
         decoder.keyDecodingStrategy = .convertFromSnakeCase
@@ -37,37 +39,43 @@ final class OAuth2Service {
         with code: String,
         completion: @escaping (Result<String, Error>) -> Void
     ) {
+        assert(Thread.isMainThread)
+        guard lastCode != code else {
+            completion(.failure(NetworkError.invalidRequest))
+            return
+        }
+
+        task?.cancel()
+        lastCode = code
+    
         guard let request = makeOAuth2Request(with: code) else {
-            print("ERROR: Не удалось создать URLRequest. Проверьте URL или URLComponents.")
+            lastCode = nil
             completion(.failure(NetworkError.invalidRequest))
             return
         }
         
-        print("REQUEST =", request.url?.absoluteString ?? "")
-        
         let task = URLSession.shared.data(for: request) { [weak self] result in
-            guard let self = self else { return }
-            
-            switch result {
-            case .success(let data):
-                do {
-                    let responseBody = try self.decoder.decode(OAuthTokenResponseBody.self, from: data)
-                    
-                    print("TOKEN =", responseBody.accessToken)
-                    self.authToken = responseBody.accessToken
-                    
-                    completion(.success(responseBody.accessToken))
-                } catch {
-                    print("DECODE ERROR:", error)
-                    completion(.failure(NetworkError.decodingError(error)))
-                }
+            DispatchQueue.main.async {
+                guard let self else { return }
+                self.task = nil
+                self.lastCode = nil
                 
-            case .failure(let error):
-                print("NETWORK OR HTTP ERROR:", error)
-                completion(.failure(error))
+                switch result {
+                case .success(let data):
+                    do {
+                        let responseBody = try self.decoder.decode(OAuthTokenResponseBody.self, from: data)
+                        self.authToken = responseBody.accessToken
+                        completion(.success(responseBody.accessToken))
+                    } catch {
+                        completion(.failure(NetworkError.decodingError(error)))
+                    }
+                case .failure(let error):
+                    completion(.failure(error))
+                }
             }
         }
         
+        self.task = task
         task.resume()
     }
     
@@ -75,7 +83,7 @@ final class OAuth2Service {
     
     private func makeOAuth2Request(with code: String) -> URLRequest? {
         guard let url = URL(string: "https://unsplash.com/oauth/token") else {
-            print("ERROR: Не удалось сформировать базовый URL для авторизации.")
+            assertionFailure("Failed to create URL")
             return nil
         }
         

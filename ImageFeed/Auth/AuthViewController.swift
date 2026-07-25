@@ -1,5 +1,7 @@
 import UIKit
+import ProgressHUD
 import OSLog
+
 
 // MARK: - AuthViewControllerDelegate
 
@@ -58,9 +60,12 @@ extension AuthViewController: WebViewViewControllerDelegate {
     }
     
     func webViewViewController(_ vc: WebViewViewController, didAuthenticateWithCode code: String) {
+        vc.dismiss(animated: true)
+        UIBlockingProgressHUD.show()
         logger.debug("Начинаем обмен кода на токен")
         
         oauth2Service.fetchOAuthToken(with: code) { [weak self] result in
+            UIBlockingProgressHUD.dismiss()
             guard let self else {
                 // Если контроллер ушел из памяти, логируем это как предупреждение
                 let staticLogger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.imagefeed", category: "Auth")
