@@ -28,6 +28,8 @@ final class OAuth2Service {
         decoder.keyDecodingStrategy = .convertFromSnakeCase
         return decoder
     }()
+    private let dataStorage = OAuth2TokenStorage.shared
+    private let urlSession = URLSession.shared
     
     // MARK: - Init
     
@@ -54,27 +56,29 @@ final class OAuth2Service {
             return
         }
         
-        let task = URLSession.shared.data(for: request) { [weak self] result in
+        let task = urlSession.objectTask(for: request) { [weak self] (result: Result<OAuthTokenResponseBody, Error>) in
             DispatchQueue.main.async {
-                guard let self else { return }
-                self.task = nil
-                self.lastCode = nil
-                
+                UIBlockingProgressHUD.dismiss()
+                guard let self = self else { return }
+
                 switch result {
-                case .success(let data):
-                    do {
-                        let responseBody = try self.decoder.decode(OAuthTokenResponseBody.self, from: data)
-                        self.authToken = responseBody.accessToken
-                        completion(.success(responseBody.accessToken))
-                    } catch {
-                        completion(.failure(NetworkError.decodingError(error)))
-                    }
+                case .success(let body):
+                    let authToken = body.accessToken
+                    self.authToken = authToken // сохраняем в свойство
+                    completion(.success(authToken))
+
+                    self.task = nil
+                    self.lastCode = nil
+
                 case .failure(let error):
+                    print("[fetchOAuthToken]: Ошибка запроса: \(error.localizedDescription)")
                     completion(.failure(error))
+
+                    self.task = nil
+                    self.lastCode = nil
                 }
             }
         }
-        
         self.task = task
         task.resume()
     }

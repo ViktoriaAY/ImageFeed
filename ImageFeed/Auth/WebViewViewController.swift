@@ -22,6 +22,7 @@ final class WebViewViewController: UIViewController {
     
     @IBOutlet private weak var progressView: UIProgressView!
     @IBOutlet private weak var webView: WKWebView!
+    private var estimatedProgressObservation: NSKeyValueObservation?
     
     // MARK: - Properties
     
@@ -34,15 +35,19 @@ final class WebViewViewController: UIViewController {
         
         webView.navigationDelegate = self
         
-        setupProgressObserver()
+       // setupProgressObserver()
+        
+        estimatedProgressObservation = webView.observe(
+            \.estimatedProgress,
+             options: [],
+             changeHandler: { [weak self] _, _ in
+                 guard let self = self else { return }
+                 self.updateProgress()
+             })
         loadAuthView()
         updateProgress()
     }
     
-    deinit {
-        webView.removeObserver(self, forKeyPath: #keyPath(WKWebView.estimatedProgress), context: nil)
-    }
-
     
     // MARK: - IBActions
     
@@ -50,31 +55,31 @@ final class WebViewViewController: UIViewController {
         delegate?.webViewViewControllerDidCancel(self)
     }
     
-    // MARK: - KVO Override
-    
-    override func observeValue(
-        forKeyPath keyPath: String?,
-        of object: Any?,
-        change: [NSKeyValueChangeKey : Any]?,
-        context: UnsafeMutableRawPointer?
-    ) {
-        if keyPath == #keyPath(WKWebView.estimatedProgress) {
-            updateProgress()
-        } else {
-            super.observeValue(forKeyPath: keyPath, of: object, change: change, context: context)
-        }
-    }
+//    // MARK: - KVO Override
+//    
+//    override func observeValue(
+//        forKeyPath keyPath: String?,
+//        of object: Any?,
+//        change: [NSKeyValueChangeKey : Any]?,
+//        context: UnsafeMutableRawPointer?
+//    ) {
+//        if keyPath == #keyPath(WKWebView.estimatedProgress) {
+//            updateProgress()
+//        } else {
+//            super.observeValue(forKeyPath: keyPath, of: object, change: change, context: context)
+//        }
+//    }
     
     // MARK: - Private Methods
-    
-    private func setupProgressObserver() {
-        webView.addObserver(
-            self,
-            forKeyPath: #keyPath(WKWebView.estimatedProgress),
-            options: .new,
-            context: nil
-        )
-    }
+//    
+//    private func setupProgressObserver() {
+//        webView.addObserver(
+//            self,
+//            forKeyPath: #keyPath(WKWebView.estimatedProgress),
+//            options: .new,
+//            context: nil
+//        )
+//    }
     
     private func loadAuthView() {
         guard var urlComponents = URLComponents(string: WebViewConstants.unsplashAuthorizeURLString) else {
@@ -100,7 +105,6 @@ final class WebViewViewController: UIViewController {
     
     private func updateProgress() {
         progressView.progress = Float(webView.estimatedProgress)
-        // Прогресс-бар скрывается ровно тогда, когда загрузка завершена на 100%
         progressView.isHidden = (1.0 - webView.estimatedProgress) <= 0.0001
     }
 }

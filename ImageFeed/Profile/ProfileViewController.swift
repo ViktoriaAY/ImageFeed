@@ -1,4 +1,5 @@
 import UIKit
+import Kingfisher
 
 // MARK: - Constants
 enum ConstantProfileView{
@@ -24,6 +25,7 @@ final class ProfileViewController: UIViewController {
         imageView.layer.cornerRadius = 35
         return imageView
     }()
+    
     
     let nameProfile: UILabel = {
         let label = UILabel()
@@ -56,12 +58,65 @@ final class ProfileViewController: UIViewController {
         return button
     }()
     
+    private var profileImageServiceObserver: NSObjectProtocol?
+    
+    
     // MARK: - Lifecycle
     
     override func viewDidLoad() {
+        
         super.viewDidLoad()
+        print("Приложение зашло в ProfileViewController!")
         setupView()
         setupConstraints()
+        if let profile = ProfileService.shared.profile {
+            updateProfileDetails(profile: profile)
+        }
+        profileImageServiceObserver = NotificationCenter.default
+            .addObserver(
+                forName: ProfileImageService.didChangeNotification,
+                object: nil,
+                queue: .main
+            ) { [weak self] _ in
+                guard let self = self else { return }
+                self.updateAvatar()
+            }
+        updateAvatar()
+    }
+    
+    private func updateAvatar() {
+        guard
+            let profileImageURL = ProfileImageService.shared.avatarURL,
+            let imageUrl = URL(string: profileImageURL)
+        else { return }
+
+        print("imageUrl: \(imageUrl)")
+
+        let placeholderImage = UIImage(systemName: "person.circle.fill")?
+            .withTintColor(.lightGray, renderingMode: .alwaysOriginal)
+            .withConfiguration(UIImage.SymbolConfiguration(pointSize: 70, weight: .regular, scale: .large))
+
+        let processor = RoundCornerImageProcessor(cornerRadius: 35)
+        profileImageView.kf.indicatorType = .activity
+        profileImageView.kf.setImage(
+            with: imageUrl,
+            placeholder: placeholderImage,
+            options: [
+                .processor(processor),
+                .scaleFactor(UIScreen.main.scale),
+                .cacheOriginalImage,
+                .forceRefresh
+            ]) { result in
+
+                switch result {
+                case .success(let value):
+                    print(value.image)
+                    print(value.cacheType)
+                    print(value.source)
+                case .failure(let error):
+                    print(error)
+                }
+            }
     }
     
     // MARK: - Setup UI
@@ -98,6 +153,18 @@ final class ProfileViewController: UIViewController {
             logoutButton.widthAnchor.constraint(equalToConstant: 44),
             logoutButton.heightAnchor.constraint(equalToConstant: 44)
         ])
+    }
+    
+    private func updateProfileDetails(profile: Profile) {
+        nameProfile.text = profile.name.isEmpty
+        ? "Имя не указано"
+        : profile.name
+        loginNameLabel.text = profile.loginName.isEmpty
+        ? "@неизвестный_пользователь"
+        : profile.loginName
+        descriptionLabel.text = (profile.bio?.isEmpty ?? true)
+        ? "Профиль не заполнен"
+        : profile.bio
     }
     
 }

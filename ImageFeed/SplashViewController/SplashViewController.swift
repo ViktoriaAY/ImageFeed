@@ -5,6 +5,7 @@ final class SplashViewController: UIViewController {
     // MARK: - Properties
     
     private let storage = OAuth2TokenStorage.shared
+    private let profileService = ProfileService.shared
     private let showAuthenticationScreenSegueIdentifier = "ShowAuthenticationScreen"
     private var isFirstLaunch = true
     
@@ -21,9 +22,11 @@ final class SplashViewController: UIViewController {
         guard isFirstLaunch else { return }
         isFirstLaunch = false
         
-        if storage.token != nil {
-            switchToTabBarController()
+        if let token = storage.token {
+            print("[SplashVC]: Токен найден в хранилище. Запускаем fetchProfile...")
+            fetchProfile(token: token)
         } else {
+            print("[SplashVC]: Токена нет. Показываем экран авторизации AuthViewController...")
             performSegue(withIdentifier: showAuthenticationScreenSegueIdentifier, sender: nil)
         }
     }
@@ -55,15 +58,49 @@ final class SplashViewController: UIViewController {
     // MARK: - Private Methods
     
     private func switchToTabBarController() {
+        print("[SplashVC]: Шаг 3. Вызван метод switchToTabBarController. Ищем главное окно через SceneDelegate...")
+        
         guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-              let window = windowScene.windows.first else { return }
+              let sceneDelegate = windowScene.delegate as? SceneDelegate,
+              let window = sceneDelegate.window else {
+            print("[SplashVC] Ошибка: Не удалось найти главное окно приложения через SceneDelegate!")
+            return
+        }
         
-        let storyboard = UIStoryboard(name: "Main", bundle: nil)
-        let tabBarController = storyboard.instantiateViewController(withIdentifier: "TabBarViewController")
+        print("[SplashVC]: Создаем TabBarController")
+        let tabBarController = TabBarController()
         
+        print("[SplashVC]: Меняем rootViewController окна на ТабБар...")
         window.rootViewController = tabBarController
         UIView.transition(with: window, duration: 0.3, options: .transitionCrossDissolve, animations: nil)
+        print("[SplashVC]: Смена экрана завершена успешно.")
     }
+
+    
+    private func fetchProfile(token: String) {
+        print("[SplashVC]: 1. Началась функция fetchProfile. Токен передан.")
+        UIBlockingProgressHUD.show()
+        
+        profileService.fetchProfile(token) { [weak self] result in
+            print("[SplashVC]: 2. Сетевой запрос вернул результат.")
+            UIBlockingProgressHUD.dismiss()
+
+            guard let self = self else { return }
+
+            switch result {
+            case let .success(profile):
+                print("[SplashVC]: 3. УСПЕХ! Профиль загружен для \(profile.username). Переключаем экран...")
+                ProfileImageService.shared.fetchProfileImageURL(username: profile.username) { _ in }
+                self.switchToTabBarController()
+
+            case let .failure(error):
+                print("[SplashVC] КРИТИЧЕСКАЯ ОШИБКА ЗАПРОСА ПРОФИЛЯ: \(error)")
+                // Если запрос упал, принудительно красим экран Splash в красный, чтобы сразу увидеть проблему визуально!
+                self.view.backgroundColor = .red
+            }
+        }
+    }
+
 }
 
 // MARK: - AuthViewControllerDelegate
@@ -71,9 +108,14 @@ final class SplashViewController: UIViewController {
 extension SplashViewController: AuthViewControllerDelegate {
     
     func didAuthenticate(_ vc: AuthViewController) {
-        vc.dismiss(animated: true) { [weak self] in
-            guard let self = self else { return }
-            self.switchToTabBarController()
+        print("[SplashVC]: Пользователь успешно авторизовался на Web-экране. Закрываем AuthViewController...")
+        vc.dismiss(animated: true)
+        
+        guard let token = storage.token else {
+            print("[SplashVC] Ошибка: После авторизации токен не сохранился в хранилище!")
+            return
         }
+        
+        fetchProfile(token: token)
     }
 }

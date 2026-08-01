@@ -208,10 +208,6 @@
                             <color key="backgroundColor" name="YP Black (iOS) "/>
                         </tabBarAppearance>
                     </tabBar>
-                    <connections>
-                        <segue destination="BYZ-38-t0r" kind="relationship" relationship="viewControllers" id="xoN-Ud-2lU"/>
-                        <segue destination="d29-pb-yXJ" kind="relationship" relationship="viewControllers" id="76R-Xx-adp"/>
-                    </connections>
                 </tabBarController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="Wve-w5-HdV" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
@@ -220,7 +216,7 @@
         <!--Profile View Controller-->
         <scene sceneID="0ph-ev-UWC">
             <objects>
-                <viewController storyboardIdentifier="ProfileViewController%%" id="d29-pb-yXJ" customClass="ProfileViewController" customModule="ImageFeed" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="ProfileViewController" id="d29-pb-yXJ" customClass="ProfileViewController" customModule="ImageFeed" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="NMZ-3o-Vo3">
                         <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -228,6 +224,7 @@
                         <color key="backgroundColor" name="YP Black (iOS) "/>
                     </view>
                     <tabBarItem key="tabBarItem" title="" image="tab_profile_active" id="HZi-y7-ysi"/>
+                    <navigationItem key="navigationItem" id="9KW-t5-IcV"/>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="Nq5-RH-gSU" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
