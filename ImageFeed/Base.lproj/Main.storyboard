@@ -197,7 +197,7 @@
         <!--Tab Bar Controller-->
         <scene sceneID="2cU-gV-hke">
             <objects>
-                <tabBarController storyboardIdentifier="TabBarViewController" id="Mbg-pB-D6a" sceneMemberID="viewController">
+                <tabBarController storyboardIdentifier="TabBarViewController" id="Mbg-pB-D6a" customClass="TabBarController" customModule="ImageFeed" customModuleProvider="target" sceneMemberID="viewController">
                     <tabBar key="tabBar" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" id="6Lb-9Y-FfI">
                         <rect key="frame" x="0.0" y="0.0" width="393" height="49"/>
                         <autoresizingMask key="autoresizingMask"/>
@@ -212,23 +212,6 @@
                 <placeholder placeholderIdentifier="IBFirstResponder" id="Wve-w5-HdV" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="-2207" y="-927"/>
-        </scene>
-        <!--Profile View Controller-->
-        <scene sceneID="0ph-ev-UWC">
-            <objects>
-                <viewController storyboardIdentifier="ProfileViewController" id="d29-pb-yXJ" customClass="ProfileViewController" customModule="ImageFeed" customModuleProvider="target" sceneMemberID="viewController">
-                    <view key="view" contentMode="scaleToFill" id="NMZ-3o-Vo3">
-                        <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
-                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                        <viewLayoutGuide key="safeArea" id="rIJ-DL-aSq"/>
-                        <color key="backgroundColor" name="YP Black (iOS) "/>
-                    </view>
-                    <tabBarItem key="tabBarItem" title="" image="tab_profile_active" id="HZi-y7-ysi"/>
-                    <navigationItem key="navigationItem" id="9KW-t5-IcV"/>
-                </viewController>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="Nq5-RH-gSU" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
-            </objects>
-            <point key="canvasLocation" x="-666" y="-1200"/>
         </scene>
         <!--Auth View Controller-->
         <scene sceneID="aDb-gu-0gG">
@@ -356,7 +339,6 @@
         <image name="button_ex" width="24" height="24"/>
         <image name="like_button_on" width="44" height="44"/>
         <image name="tab_editorial_active" width="30" height="30"/>
-        <image name="tab_profile_active" width="30" height="30"/>
         <namedColor name="YP Black (iOS)">
             <color red="0.10196078431372549" green="0.10588235294117647" blue="0.13333333333333333" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </namedColor>

@@ -12,22 +12,27 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     var window: UIWindow?
 
 
+//    func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
+//        guard let windowScene = (scene as? UIWindowScene) else { return }
+//
+//        let window = UIWindow(windowScene: windowScene)
+//      
+//        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+//        
+//        guard let splashVC = storyboard.instantiateInitialViewController() else { return }
+//        
+//        window.rootViewController = splashVC
+//        self.window = window
+//        window.makeKeyAndVisible()
+//    }
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
-        guard let windowScene = (scene as? UIWindowScene) else { return }
-        
-        // Создаем окно вручную
-        let window = UIWindow(windowScene: windowScene)
-        
-        // Принудительно загружаем Main.storyboard
-        let storyboard = UIStoryboard(name: "Main", bundle: nil)
-        
-        // Берем начальный контроллер (наш SplashViewController со стрелочкой)
-        guard let splashVC = storyboard.instantiateInitialViewController() else { return }
-        
-        // Назначаем его главным и отображаем окно
-        window.rootViewController = splashVC
-        self.window = window
-        window.makeKeyAndVisible()
+        guard let scene = (scene as? UIWindowScene) else { return }
+        window = UIWindow(windowScene: scene)                   // 1
+        window?.rootViewController = UIStoryboard(              // 2
+            name: "Main",
+            bundle: .main
+        ).instantiateInitialViewController()
+        window?.makeKeyAndVisible()                             // 3
     }
 
     func sceneDidDisconnect(_ scene: UIScene) {

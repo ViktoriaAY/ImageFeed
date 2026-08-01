@@ -57,23 +57,45 @@ final class SplashViewController: UIViewController {
     
     // MARK: - Private Methods
     
+//    private func switchToTabBarController() {
+//        print("[SplashVC]: Шаг 3. Вызван метод switchToTabBarController. Ищем главное окно через SceneDelegate...")
+//        
+//        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+//              let sceneDelegate = windowScene.delegate as? SceneDelegate,
+//              let window = sceneDelegate.window else {
+//            print("[SplashVC] Ошибка: Не удалось найти главное окно приложения через SceneDelegate!")
+//            return
+//        }
+//        
+//        print("[SplashVC]: Создаем TabBarController")
+//        let tabBarController = TabBarController()
+//        
+//        print("[SplashVC]: Меняем rootViewController окна на ТабБар...")
+//        window.rootViewController = tabBarController
+//        UIView.transition(with: window, duration: 0.3, options: .transitionCrossDissolve, animations: nil)
+//        print("[SplashVC]: Смена экрана завершена успешно.")
+//    }
+
     private func switchToTabBarController() {
-        print("[SplashVC]: Шаг 3. Вызван метод switchToTabBarController. Ищем главное окно через SceneDelegate...")
+        print("[SplashVC]: Шаг 3. Запрашиваем смену экрана. Перенаправляем в главный поток...")
         
-        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-              let sceneDelegate = windowScene.delegate as? SceneDelegate,
-              let window = sceneDelegate.window else {
-            print("[SplashVC] Ошибка: Не удалось найти главное окно приложения через SceneDelegate!")
-            return
+        DispatchQueue.main.async {
+            guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                  let sceneDelegate = windowScene.delegate as? SceneDelegate,
+                  let window = sceneDelegate.window else {
+                print("[SplashVC] Ошибка: Не удалось найти главное окно приложения через SceneDelegate!")
+                return
+            }
+            
+            print("[SplashVC]: Загружаем TabBarViewController из Storyboard (активируем awakeFromNib)...")
+            let storyboard = UIStoryboard(name: "Main", bundle: nil)
+            let tabBarController = storyboard.instantiateViewController(withIdentifier: "TabBarViewController")
+            
+            print("[SplashVC]: Меняем rootViewController окна на ТабБар...")
+            window.rootViewController = tabBarController
+            UIView.transition(with: window, duration: 0.3, options: .transitionCrossDissolve, animations: nil)
+            print("[SplashVC]: Смена экрана завершена успешно.")
         }
-        
-        print("[SplashVC]: Создаем TabBarController")
-        let tabBarController = TabBarController()
-        
-        print("[SplashVC]: Меняем rootViewController окна на ТабБар...")
-        window.rootViewController = tabBarController
-        UIView.transition(with: window, duration: 0.3, options: .transitionCrossDissolve, animations: nil)
-        print("[SplashVC]: Смена экрана завершена успешно.")
     }
 
     
