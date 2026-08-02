@@ -1,23 +1,18 @@
 import Foundation
 
+// MARK: - Models
 struct ProfileImage: Codable {
     let small: String
     let medium: String
     let large: String
-    
-//    private enum CodingKeys: String, CodingKey {
-//        case small
-//        case medium
-//        case large
-//    }
 }
 
 struct UserResult: Codable {
     let profileImage: ProfileImage
     
-//    private enum CodingKeys: String, CodingKey {
-//        case profileImage = "profile_image"
-//    }
+    // ВАЖНО: Мы убрали private enum CodingKeys!
+    // Теперь .convertFromSnakeCase внутри вашего objectTask автоматически свяжет
+    // свойство profileImage с ключом "profile_image" из JSON от Unsplash.
 }
 
 final class ProfileImageService {
@@ -57,8 +52,8 @@ final class ProfileImageService {
                     )
 
             case .failure(let error):
-                print("[fetchProfileImageURL]: Ошибка запроса: \(error.localizedDescription)")
-                completion(.failure(error)) // Прокидываем ошибку
+                print("[ProfileImageService.fetchProfileImageURL]: \(error) для пользователя: \(username)")
+                completion(.failure(error))
             }
         }
 

@@ -22,11 +22,11 @@ final class WebViewViewController: UIViewController {
     
     @IBOutlet private weak var progressView: UIProgressView!
     @IBOutlet private weak var webView: WKWebView!
-    private var estimatedProgressObservation: NSKeyValueObservation?
     
     // MARK: - Properties
     
     weak var delegate: WebViewViewControllerDelegate?
+    private var estimatedProgressObservation: NSKeyValueObservation?
     
     // MARK: - Lifecycle
     
@@ -34,20 +34,10 @@ final class WebViewViewController: UIViewController {
         super.viewDidLoad()
         
         webView.navigationDelegate = self
-        
-       // setupProgressObserver()
-        
-        estimatedProgressObservation = webView.observe(
-            \.estimatedProgress,
-             options: [],
-             changeHandler: { [weak self] _, _ in
-                 guard let self = self else { return }
-                 self.updateProgress()
-             })
+        setupProgressObserver()
         loadAuthView()
         updateProgress()
     }
-    
     
     // MARK: - IBActions
     
@@ -55,35 +45,21 @@ final class WebViewViewController: UIViewController {
         delegate?.webViewViewControllerDidCancel(self)
     }
     
-//    // MARK: - KVO Override
-//    
-//    override func observeValue(
-//        forKeyPath keyPath: String?,
-//        of object: Any?,
-//        change: [NSKeyValueChangeKey : Any]?,
-//        context: UnsafeMutableRawPointer?
-//    ) {
-//        if keyPath == #keyPath(WKWebView.estimatedProgress) {
-//            updateProgress()
-//        } else {
-//            super.observeValue(forKeyPath: keyPath, of: object, change: change, context: context)
-//        }
-//    }
-    
     // MARK: - Private Methods
-//    
-//    private func setupProgressObserver() {
-//        webView.addObserver(
-//            self,
-//            forKeyPath: #keyPath(WKWebView.estimatedProgress),
-//            options: .new,
-//            context: nil
-//        )
-//    }
+    
+    private func setupProgressObserver() {
+        estimatedProgressObservation = webView.observe(
+            \.estimatedProgress,
+             options: [],
+             changeHandler: { [weak self] _, _ in
+                 guard let self = self else { return }
+                 self.updateProgress()
+             })
+    }
     
     private func loadAuthView() {
         guard var urlComponents = URLComponents(string: WebViewConstants.unsplashAuthorizeURLString) else {
-            print("ERROR: Не удалось создать URLComponents для авторизации в WebView")
+            print("[WebViewViewController.loadAuthView]: Failed to create URLComponents")
             return
         }
         
@@ -95,7 +71,7 @@ final class WebViewViewController: UIViewController {
         ]
         
         guard let url = urlComponents.url else {
-            print("ERROR: Не удалось получить URL из компонентов в WebView")
+            print("[WebViewViewController.loadAuthView]: Failed to get URL from components")
             return
         }
         
@@ -123,7 +99,7 @@ extension WebViewViewController: WKNavigationDelegate {
                 if let code = code(from: url) {
                     delegate?.webViewViewController(self, didAuthenticateWithCode: code)
                 } else {
-                    print("ERROR: Перенаправление произошло, но 'code' не найден в URL параметров")
+                    print("[WebViewViewController.decidePolicyFor]: Code not found in redirect URL parameters")
                 }
                 decisionHandler(.cancel)
                 return

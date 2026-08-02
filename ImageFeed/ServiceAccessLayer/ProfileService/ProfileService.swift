@@ -1,5 +1,7 @@
 import Foundation
 
+// MARK: - Models
+
 struct Profile {
     let username: String
     let name: String
@@ -12,23 +14,26 @@ struct ProfileResult: Codable {
     let firstName: String
     let lastName: String
     let bio: String?
-
-//    private enum CodingKeys: String, CodingKey {
-//        case username
-//        case firstName = "first_name"
-//        case lastName = "last_name"
-//        case bio
-//    }
 }
 
-final class ProfileService {
-    static let shared = ProfileService()
-    private init() {}
+// MARK: - ProfileService
 
+final class ProfileService {
+    
+    // MARK: - Properties
+    
+    static let shared = ProfileService()
+    
+    private(set) var profile: Profile?
     private var task: URLSessionTask?
     private let urlSession = URLSession.shared
-    private(set) var profile: Profile?
+    
+    // MARK: - Init
+    
+    private init() {}
 
+    // MARK: - Public Methods
+    
     func fetchProfile(_ token: String, completion: @escaping (Result<Profile, Error>) -> Void) {
         task?.cancel()
 
@@ -50,7 +55,7 @@ final class ProfileService {
                 self?.profile = profile
                 completion(.success(profile))
             case .failure(let error):
-                print("[fetchProfile]: Ошибка запроса: \(error.localizedDescription)")
+                print("[ProfileService.fetchProfile]: \(error) при запросе профиля с токеном длиной \(token.count) символов")
                 completion(.failure(error))
             }
             self?.task = nil
@@ -59,6 +64,8 @@ final class ProfileService {
         self.task = task
         task.resume()
     }
+
+    // MARK: - Private Methods
     
     private func makeProfileRequest(token: String) -> URLRequest? {
         guard let url = URL(string: "https://api.unsplash.com/me") else {
@@ -70,6 +77,4 @@ final class ProfileService {
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         return request
     }
-   
 }
-

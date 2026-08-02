@@ -1,37 +1,13 @@
-//
-//  SceneDelegate.swift
-//  ImageFeed
-//
-//  Created by Виктория Юношева on 28.05.2026.
-//
-
 import UIKit
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     var window: UIWindow?
 
-
-//    func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
-//        guard let windowScene = (scene as? UIWindowScene) else { return }
-//
-//        let window = UIWindow(windowScene: windowScene)
-//      
-//        let storyboard = UIStoryboard(name: "Main", bundle: nil)
-//        
-//        guard let splashVC = storyboard.instantiateInitialViewController() else { return }
-//        
-//        window.rootViewController = splashVC
-//        self.window = window
-//        window.makeKeyAndVisible()
-//    }
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
         guard let scene = (scene as? UIWindowScene) else { return }
         window = UIWindow(windowScene: scene)                   // 1
-        window?.rootViewController = UIStoryboard(              // 2
-            name: "Main",
-            bundle: .main
-        ).instantiateInitialViewController()
+        window?.rootViewController = SplashViewController()
         window?.makeKeyAndVisible()                             // 3
     }
 
