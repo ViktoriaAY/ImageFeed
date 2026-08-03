@@ -1,5 +1,6 @@
 import UIKit
 import WebKit
+import OSLog
 
 // MARK: - WebViewConstants
 
@@ -27,6 +28,7 @@ final class WebViewViewController: UIViewController {
     
     weak var delegate: WebViewViewControllerDelegate?
     private var estimatedProgressObservation: NSKeyValueObservation?
+    private let logger = Logger(category: "WebViewViewController")
     
     // MARK: - Lifecycle
     
@@ -52,14 +54,14 @@ final class WebViewViewController: UIViewController {
             \.estimatedProgress,
              options: [],
              changeHandler: { [weak self] _, _ in
-                 guard let self = self else { return }
+                 guard let self else { return }
                  self.updateProgress()
              })
     }
     
     private func loadAuthView() {
         guard var urlComponents = URLComponents(string: WebViewConstants.unsplashAuthorizeURLString) else {
-            print("[WebViewViewController.loadAuthView]: Failed to create URLComponents")
+            logger.error("[WebViewViewController.loadAuthView]: Failed to create URLComponents")
             return
         }
         
@@ -71,7 +73,7 @@ final class WebViewViewController: UIViewController {
         ]
         
         guard let url = urlComponents.url else {
-            print("[WebViewViewController.loadAuthView]: Failed to get URL from components")
+            logger.error("[WebViewViewController.loadAuthView]: Failed to get URL from components")
             return
         }
         
@@ -99,7 +101,7 @@ extension WebViewViewController: WKNavigationDelegate {
                 if let code = code(from: url) {
                     delegate?.webViewViewController(self, didAuthenticateWithCode: code)
                 } else {
-                    print("[WebViewViewController.decidePolicyFor]: Code not found in redirect URL parameters")
+                    logger.error("[WebViewViewController.decidePolicyFor]: Code not found in redirect URL parameters")
                 }
                 decisionHandler(.cancel)
                 return

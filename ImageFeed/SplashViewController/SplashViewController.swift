@@ -1,6 +1,10 @@
 import UIKit
+import OSLog
 
 final class SplashViewController: UIViewController {
+    
+    // MARK: - Logger
+    private let logger = Logger(category: "SplashViewController")
     
     // MARK: - Properties
     
@@ -35,10 +39,10 @@ final class SplashViewController: UIViewController {
         isFirstLaunch = false
         
         if let token = storage.token {
-            print("[SplashVC]: Токен найден в хранилище. Запускаем fetchProfile...")
+            logger.info("Token found in storage. Starting fetchProfile")
             fetchProfile(token: token)
         } else {
-            print("[SplashVC]: Токена нет. Показываем экран авторизации кодом из задания...")
+            logger.info("No token found. Presenting AuthViewController")
 
             let storyboard = UIStoryboard(name: "Main", bundle: nil)
             
@@ -80,51 +84,52 @@ final class SplashViewController: UIViewController {
     }
     
     private func switchToTabBarController() {
-        print("[SplashVC]: Шаг 3. Запрашиваем смену экрана. Перенаправляем в главный поток...")
+        logger.info("Requesting screen switch. Redirecting to main thread")
         
         DispatchQueue.main.async {
             guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
                   let sceneDelegate = windowScene.delegate as? SceneDelegate,
                   let window = sceneDelegate.window else {
-                print("[SplashVC] Ошибка: Не удалось найти главное окно приложения через SceneDelegate!")
+                self.logger.error("Failed to find main window via SceneDelegate!")
                 return
             }
             
-            print("[SplashVC]: Загружаем TabBarViewController из Storyboard (активируем awakeFromNib)...")
+            self.logger.info("Instantiating TabBarViewController from Storyboard")
             let storyboard = UIStoryboard(name: "Main", bundle: nil)
             let tabBarController = storyboard.instantiateViewController(withIdentifier: "TabBarViewController")
             
-            print("[SplashVC]: Меняем rootViewController окна на ТабБар...")
+            self.logger.info("Changing rootViewController to TabBar")
             window.rootViewController = tabBarController
             UIView.transition(with: window, duration: 0.3, options: .transitionCrossDissolve, animations: nil)
-            print("[SplashVC]: Смена экрана завершена успешно.")
+            self.logger.info("Screen switch completed successfully.")
         }
     }
     
     private func fetchProfile(token: String) {
-        print("[SplashVC]: Началась функция fetchProfile. Токен передан.")
+        logger.info("fetchProfile started. Token received.")
         UIBlockingProgressHUD.show()
         
         profileService.fetchProfile(token) { [weak self] result in
-            print("[SplashVC]: Сетевой запрос профиля вернул результат.")
+            // Скрываем лоадер сразу, предотвращая зависание интерфейса
+            UIBlockingProgressHUD.dismiss()
 
-            guard let self = self else { return }
+            guard let self else { return }
+            self.logger.info("Profile network request returned a result.")
 
             switch result {
             case let .success(profile):
-                print("[SplashVC]: Профиль загружен для \(profile.username). Запрашиваем ссылку на аватарку...")
+                // Защищаем личные данные (username) при помощи приватности логов на реальных девайсах
+                self.logger.info("Profile loaded for \(profile.username, privacy: .private). Requesting avatar URL")
             
                 ProfileImageService.shared.fetchProfileImageURL(username: profile.username) { [weak self] _ in
                     guard let self = self else { return }
                     
-                    print("[SplashVC]: Ссылка на аватарку получена. Скрываем HUD и переключаем экран.")
-                    UIBlockingProgressHUD.dismiss()
+                    self.logger.info("Avatar URL received. Switching screen.")
                     self.switchToTabBarController()
                 }
 
             case let .failure(error):
-                UIBlockingProgressHUD.dismiss()
-                print("[SplashVC] КРИТИЧЕСКАЯ ОШИБКА ЗАПРОСА ПРОФИЛЯ: \(error)")
+                self.logger.error("CRITICAL ERROR DURING PROFILE REQUEST: \(error.localizedDescription)")
                 self.view.backgroundColor = .red
             }
         }
@@ -136,11 +141,11 @@ final class SplashViewController: UIViewController {
 extension SplashViewController: AuthViewControllerDelegate {
     
     func didAuthenticate(_ vc: AuthViewController) {
-        print("[SplashVC]: Пользователь успешно авторизовался на Web-экране. Закрываем AuthViewController...")
+        logger.info("User authenticated successfully via Web view. Dismissing AuthViewController...")
         vc.dismiss(animated: true)
         
         guard let token = storage.token else {
-            print("[SplashVC] Ошибка: После авторизации токен не сохранился в хранилище!")
+            logger.error("Error: Token was not saved to storage after authentication!")
             return
         }
         

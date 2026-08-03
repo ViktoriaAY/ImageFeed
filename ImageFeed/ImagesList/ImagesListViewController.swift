@@ -2,6 +2,11 @@ import UIKit
 
 // MARK: - ImagesListViewController
 
+enum LikeImage: String {
+    case on = "like_button_on"
+    case off = "like_button_off"
+}
+
 final class ImagesListViewController: UIViewController {
     
     // MARK: - IBOutlets
@@ -63,7 +68,7 @@ final class ImagesListViewController: UIViewController {
     
     private func setIsLiked(for cell: ImagesListCell, with indexPath: IndexPath) {
         let isLiked = indexPath.row % 2 == 0
-        let likeImageName = isLiked ? "like_button_on" : "like_button_off"
+        let likeImageName = isLiked ? LikeImage.on.rawValue : LikeImage.off.rawValue
         guard let likeImage = UIImage(named: likeImageName) else { return }
         cell.likeButton.setImage(likeImage, for: .normal)
     }

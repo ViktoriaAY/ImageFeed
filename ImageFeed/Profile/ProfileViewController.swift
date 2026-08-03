@@ -20,20 +20,66 @@ enum ConstantProfileView {
 
 final class ProfileViewController: UIViewController {
     
-    // MARK: - Private Properties
+    // MARK: - Private UI Properties
     
-    private var avatarImageView: UIImageView!
-    private var nameLabel: UILabel!
-    private var loginNameLabel: UILabel!
-    private var descriptionLabel: UILabel!
-    private var logoutButton: UIButton! 
+    private lazy var avatarImageView: UIImageView = {
+        let profileImage = UIImage(systemName: "person.circle.fill")?
+            .withTintColor(.lightGray, renderingMode: .alwaysOriginal)
+            .withConfiguration(UIImage.SymbolConfiguration(pointSize: 70, weight: .regular, scale: .large))
+        let imageView = UIImageView(image: profileImage)
+        imageView.contentMode = .scaleAspectFill
+        imageView.clipsToBounds = true
+        imageView.layer.cornerRadius = 35
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        return imageView
+    }()
+    
+    private lazy var nameLabel: UILabel = {
+        let label = UILabel()
+        label.text = ConstantProfileView.ProfileView.namePlaceholder
+        label.textColor = UIColor(named: ConstantProfileView.ProfileView.whiteColor) ?? .white
+        label.font = UIFont.systemFont(ofSize: 23, weight: .bold)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
+    private lazy var loginNameLabel: UILabel = {
+        let label = UILabel()
+        label.text = ConstantProfileView.ProfileView.nicknamePlaceholder
+        label.textColor = UIColor(named: ConstantProfileView.ProfileView.grayColor) ?? .gray
+        label.font = UIFont.systemFont(ofSize: 13, weight: .regular)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
+    private lazy var descriptionLabel: UILabel = {
+        let label = UILabel()
+        label.text = ConstantProfileView.ProfileView.descriptionPlaceholder
+        label.textColor = UIColor(named: ConstantProfileView.ProfileView.whiteColor) ?? .white
+        label.font = UIFont.systemFont(ofSize: 13, weight: .regular)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
+    private lazy var logoutButton: UIButton = {
+        let image = UIImage(named: ConstantProfileView.ProfileView.logoutImage) ?? UIImage()
+        let button = UIButton.systemButton(
+            with: image,
+            target: self,
+            action: #selector(didTapLogoutButton)
+        )
+        button.tintColor = .red
+        button.translatesAutoresizingMaskIntoConstraints = false
+        return button
+    }()
+    
     private var profileImageServiceObserver: NSObjectProtocol?
 
     // MARK: - Lifecycle
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        SetupUI()
+        setupUI()
         
         if let profile = ProfileService.shared.profile {
             updateProfileDetails(profile: profile)
@@ -59,91 +105,32 @@ final class ProfileViewController: UIViewController {
 
     // MARK: - Private Methods
     
-    private func SetupUI() {
+    private func setupUI() {
         view.backgroundColor = UIColor(named: ConstantProfileView.ProfileView.backgroundColor)
-        setupAvatarView()
-        setupNameLabel()
-        setupDescriptionLabel()
-        setupLogoutButton()
-    }
-
-    private func setupAvatarView() {
-        let profileImage = UIImage(systemName: "person.circle.fill")?
-            .withTintColor(.lightGray, renderingMode: .alwaysOriginal)
-            .withConfiguration(UIImage.SymbolConfiguration(pointSize: 70, weight: .regular, scale: .large))
-        avatarImageView = UIImageView(image: profileImage)
-        avatarImageView.contentMode = .scaleAspectFill
-        avatarImageView.clipsToBounds = true
-        avatarImageView.layer.cornerRadius = 35
         
-        avatarImageView.translatesAutoresizingMaskIntoConstraints = false
+        // Добавляем сабвью на экран
         view.addSubview(avatarImageView)
+        view.addSubview(nameLabel)
+        view.addSubview(loginNameLabel)
+        view.addSubview(descriptionLabel)
+        view.addSubview(logoutButton)
         
         let size: CGFloat = 70
-        
         NSLayoutConstraint.activate([
             avatarImageView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 56),
             avatarImageView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 16),
             avatarImageView.widthAnchor.constraint(equalToConstant: size),
-            avatarImageView.heightAnchor.constraint(equalToConstant: size)
-        ])
-    }
-    
-    private func setupNameLabel() {
-        nameLabel = UILabel()
-        nameLabel.text = ConstantProfileView.ProfileView.namePlaceholder
-        nameLabel.textColor = UIColor(named: ConstantProfileView.ProfileView.whiteColor) ?? .white
-        nameLabel.font = UIFont.systemFont(ofSize: 23, weight: .bold)
-        
-        nameLabel.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(nameLabel)
-        
-        NSLayoutConstraint.activate([
+            avatarImageView.heightAnchor.constraint(equalToConstant: size),
+            
             nameLabel.topAnchor.constraint(equalTo: avatarImageView.bottomAnchor, constant: 8),
-            nameLabel.leadingAnchor.constraint(equalTo: avatarImageView.leadingAnchor)
-        ])
-        
-        loginNameLabel = UILabel()
-        loginNameLabel.text = ConstantProfileView.ProfileView.nicknamePlaceholder
-        loginNameLabel.textColor = UIColor(named: ConstantProfileView.ProfileView.grayColor) ?? .gray
-        loginNameLabel.font = UIFont.systemFont(ofSize: 13, weight: .regular)
-        
-        loginNameLabel.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(loginNameLabel)
-        
-        NSLayoutConstraint.activate([
+            nameLabel.leadingAnchor.constraint(equalTo: avatarImageView.leadingAnchor),
+            
             loginNameLabel.topAnchor.constraint(equalTo: nameLabel.bottomAnchor, constant: 8),
-            loginNameLabel.leadingAnchor.constraint(equalTo: avatarImageView.leadingAnchor)
-        ])
-    }
-    
-    private func setupDescriptionLabel() {
-        descriptionLabel = UILabel()
-        descriptionLabel.text = ConstantProfileView.ProfileView.descriptionPlaceholder
-        descriptionLabel.textColor = UIColor(named: ConstantProfileView.ProfileView.whiteColor) ?? .white
-        descriptionLabel.font = UIFont.systemFont(ofSize: 13, weight: .regular)
-        
-        descriptionLabel.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(descriptionLabel)
-        
-        NSLayoutConstraint.activate([
+            loginNameLabel.leadingAnchor.constraint(equalTo: avatarImageView.leadingAnchor),
+            
             descriptionLabel.topAnchor.constraint(equalTo: loginNameLabel.bottomAnchor, constant: 8),
-            descriptionLabel.leadingAnchor.constraint(equalTo: avatarImageView.leadingAnchor)
-        ])
-    }
-    
-    private func setupLogoutButton() {
-        logoutButton = UIButton.systemButton(
-            with: UIImage(named: ConstantProfileView.ProfileView.logoutImage)!,
-            target: self,
-            action: #selector(didTapLogoutButton)
-        )
-        
-        logoutButton.tintColor = .red
-        logoutButton.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(logoutButton)
-        
-        NSLayoutConstraint.activate([
+            descriptionLabel.leadingAnchor.constraint(equalTo: avatarImageView.leadingAnchor),
+            
             logoutButton.centerYAnchor.constraint(equalTo: avatarImageView.centerYAnchor),
             logoutButton.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16)
         ])
@@ -154,8 +141,6 @@ final class ProfileViewController: UIViewController {
             let profileImageURL = ProfileImageService.shared.avatarURL,
             let imageUrl = URL(string: profileImageURL)
         else { return }
-
-        print("[ProfileViewController.updateAvatar]: imageUrl: \(imageUrl)")
 
         let placeholderImage = UIImage(systemName: "person.circle.fill")?
             .withTintColor(.lightGray, renderingMode: .alwaysOriginal)
@@ -171,14 +156,7 @@ final class ProfileViewController: UIViewController {
                 .scaleFactor(UIScreen.main.scale),
                 .cacheOriginalImage,
                 .forceRefresh
-            ]) { result in
-                switch result {
-                case .success(let value):
-                    print("[ProfileViewController.updateAvatar]: Success \(value.cacheType)")
-                case .failure(let error):
-                    print("[ProfileViewController.updateAvatar]: Error \(error)")
-                }
-            }
+            ])
     }
     
     private func updateProfileDetails(profile: Profile) {
