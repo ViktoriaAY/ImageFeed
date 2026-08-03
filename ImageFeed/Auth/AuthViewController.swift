@@ -2,33 +2,27 @@ import UIKit
 import ProgressHUD
 import OSLog
 
-
 // MARK: - AuthViewControllerDelegate
-
 protocol AuthViewControllerDelegate: AnyObject {
     func didAuthenticate(_ vc: AuthViewController)
 }
 
 // MARK: - AuthViewController
-
 final class AuthViewController: UIViewController {
     
     // MARK: - Properties
-    
     private let showWebViewSegueIdentifier = "ShowWebView"
     private let oauth2Service = OAuth2Service.shared
     weak var delegate: AuthViewControllerDelegate?
-    private let logger = Logger(category: "Auth") 
+    private let logger = Logger(category: "Auth")
     
     // MARK: - Lifecycle
-    
     override func viewDidLoad() {
         super.viewDidLoad()
         configureBackButton()
     }
     
     // MARK: - Overrides
-    
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == showWebViewSegueIdentifier {
             guard let webViewViewController = segue.destination as? WebViewViewController else {
@@ -42,7 +36,6 @@ final class AuthViewController: UIViewController {
     }
     
     // MARK: - Private Methods
-    
     private func configureBackButton() {
         navigationController?.navigationBar.backIndicatorImage = UIImage(resource: .navBackButton)
         navigationController?.navigationBar.backIndicatorTransitionMaskImage = UIImage(resource: .navBackButton)
@@ -52,7 +45,6 @@ final class AuthViewController: UIViewController {
 }
 
 // MARK: - WebViewViewControllerDelegate
-
 extension AuthViewController: WebViewViewControllerDelegate {
     
     func webViewViewControllerDidCancel(_ vc: WebViewViewController) {
@@ -67,13 +59,11 @@ extension AuthViewController: WebViewViewControllerDelegate {
         oauth2Service.fetchOAuthToken(with: code) { [weak self] result in
             UIBlockingProgressHUD.dismiss()
             guard let self else {
-                // Если контроллер ушел из памяти, логируем это как предупреждение
                 let staticLogger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.imagefeed", category: "Auth")
                 staticLogger.warning("AuthViewController был уничтожен в памяти")
                 return
             }
-            
-            // Логируем результат выполнения запроса
+
             self.logger.debug("Получен результат сетевого запроса: \(String(describing: result))")
             
             switch result {
@@ -86,11 +76,27 @@ extension AuthViewController: WebViewViewControllerDelegate {
                 
             case .failure(let error):
                 self.logger.error("Сетевая ошибка авторизации: \(error.localizedDescription)")
+                self.showAuthErrorAlert()
             }
         }
     }
 }
 
+// MARK: - Alert Extension
+extension AuthViewController {
+    func showAuthErrorAlert() {
+        let alertController = UIAlertController(
+            title: "Что-то пошло не так (",
+            message: "Не удалось войти в систему",
+            preferredStyle: .alert
+        )
+        let okAction = UIAlertAction(title: "Ок", style: .default, handler: nil)
+        alertController.addAction(okAction)
+        present(alertController, animated: true, completion: nil)
+    }
+}
+
+// MARK: - Logger Extension
 extension Logger {
     private static let subsystem = Bundle.main.bundleIdentifier ?? "com.imagefeed"
     init(category: String) {

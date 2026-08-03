@@ -6,6 +6,8 @@ private struct OAuthTokenResponseBody: Decodable {
     let accessToken: String
 }
 
+// MARK: - HTTPMethod
+
 enum HTTPMethod: String {
     case get = "GET"
     case post = "POST"
@@ -28,6 +30,8 @@ final class OAuth2Service {
         decoder.keyDecodingStrategy = .convertFromSnakeCase
         return decoder
     }()
+    private let dataStorage = OAuth2TokenStorage.shared
+    private let urlSession = URLSession.shared
     
     // MARK: - Init
     
@@ -40,41 +44,43 @@ final class OAuth2Service {
         completion: @escaping (Result<String, Error>) -> Void
     ) {
         assert(Thread.isMainThread)
+        
         guard lastCode != code else {
-            completion(.failure(NetworkError.invalidRequest))
+            print("[OAuth2Service]: Повторный запрос с тем же кодом игнорируется.")
             return
         }
-
+        
         task?.cancel()
         lastCode = code
-    
+
         guard let request = makeOAuth2Request(with: code) else {
             lastCode = nil
             completion(.failure(NetworkError.invalidRequest))
             return
         }
         
-        let task = URLSession.shared.data(for: request) { [weak self] result in
+        let task = urlSession.objectTask(for: request) { [weak self] (result: Result<OAuthTokenResponseBody, Error>) in
             DispatchQueue.main.async {
-                guard let self else { return }
-                self.task = nil
-                self.lastCode = nil
-                
+                guard let self = self else { return }
+
                 switch result {
-                case .success(let data):
-                    do {
-                        let responseBody = try self.decoder.decode(OAuthTokenResponseBody.self, from: data)
-                        self.authToken = responseBody.accessToken
-                        completion(.success(responseBody.accessToken))
-                    } catch {
-                        completion(.failure(NetworkError.decodingError(error)))
-                    }
+                case .success(let body):
+                    let authToken = body.accessToken
+                    self.authToken = authToken
+                    completion(.success(authToken))
+                    
+                    self.task = nil
+                    self.lastCode = nil
+
                 case .failure(let error):
+                    print("[OAuth2Service.fetchOAuthToken]: \(error) с кодом авторизации: \(code)")
                     completion(.failure(error))
+                    
+                    self.task = nil
+                    self.lastCode = nil
                 }
             }
         }
-        
         self.task = task
         task.resume()
     }
