@@ -173,7 +173,8 @@ extension ImagesListViewController: ImagesListCellDelegate {
             switch result {
             case .success:
                 self.photos = self.imagesListService.photos
-                cell.setIsLiked(isLiked: photo.isLiked)
+                let updatedPhoto = self.photos[indexPath.row]
+                cell.setIsLiked(isLiked: updatedPhoto.isLiked)
                 
             case .failure(let error):
                 self.showLikeErrorAlert()
@@ -181,7 +182,7 @@ extension ImagesListViewController: ImagesListCellDelegate {
             }
         }
     }
-
+    
     private func showLikeErrorAlert() {
         let alert = UIAlertController(
             title: "Что-то пошло не так",
@@ -196,9 +197,10 @@ extension ImagesListViewController: ImagesListCellDelegate {
 extension DateFormatter {
     static let sharedImagesListFormatter: DateFormatter = {
         let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        formatter.timeStyle = .none
+        formatter.locale = Locale(identifier: "ru_RU")
+        formatter.dateFormat = "d MMMM yyyy"
         return formatter
     }()
 }
+
 
