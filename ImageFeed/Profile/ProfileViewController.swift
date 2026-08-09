@@ -74,7 +74,8 @@ final class ProfileViewController: UIViewController {
     }()
     
     private var profileImageServiceObserver: NSObjectProtocol?
-
+    private var animationLayers = [CAGradientLayer]()
+    
     // MARK: - Lifecycle
     
     override func viewDidLoad() {
@@ -97,18 +98,88 @@ final class ProfileViewController: UIViewController {
         
         updateAvatar()
     }
-
+    
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        
+        // Если профиль ещё загружается — включаем скелетон-эффект
+        if ProfileService.shared.profile == nil {
+            avatarImageView.addSkeletonAnimation(cornerRadius: avatarImageView.bounds.height / 2)
+            nameLabel.addSkeletonAnimation(cornerRadius: 4)
+            loginNameLabel.addSkeletonAnimation(cornerRadius: 4)
+            descriptionLabel.addSkeletonAnimation(cornerRadius: 4)
+        }
+    }
+    
     // MARK: - Actions
+    private func addGradientAnimation(to view: UIView, cornerRadius: CGFloat) {
+        let gradient = CAGradientLayer()
+        gradient.frame = CGRect(origin: .zero, size: view.bounds.size)
+        gradient.locations = [0, 0.1, 0.3]
+        gradient.colors = [
+            UIColor(red: 0.682, green: 0.686, blue: 0.706, alpha: 1).cgColor,
+            UIColor(red: 0.531, green: 0.533, blue: 0.553, alpha: 1).cgColor,
+            UIColor(red: 0.431, green: 0.433, blue: 0.453, alpha: 1).cgColor
+        ]
+        gradient.startPoint = CGPoint(x: 0, y: 0.5)
+        gradient.endPoint = CGPoint(x: 1, y: 0.5)
+        gradient.cornerRadius = cornerRadius
+        gradient.masksToBounds = true
+        let gradientChangeAnimation = CABasicAnimation(keyPath: "locations")
+        gradientChangeAnimation.fromValue = [0, 0.1, 0.3]
+        gradientChangeAnimation.toValue = [0.7, 0.8, 1.0]
+        gradientChangeAnimation.duration = 1.2
+        gradientChangeAnimation.repeatCount = .infinity
+        gradient.add(gradientChangeAnimation, forKey: "locationsChange")
+        animationLayers.append(gradient)
+        view.layer.addSublayer(gradient)
+    }
+    
+    private func removeGradientAnimation() {
+        animationLayers.forEach { $0.removeFromSuperlayer() }
+        animationLayers.removeAll()
+    }
+    
+    
     
     @objc private func didTapLogoutButton() {
+        let alert = UIAlertController(
+            title: "Пока, пока!",
+            message: "Уверен, что хотите выйти?",
+            preferredStyle: .alert
+        )
+        
+        let yesAction = UIAlertAction(title: "Да", style: .default) { [weak self] _ in
+            guard let self = self else { return }
+            
+            ProfileLogoutService.shared.logout()
+            self.switchToSplashViewController()
+        }
+        
+        let noAction = UIAlertAction(title: "Нет", style: .cancel)
+        alert.addAction(yesAction)
+        alert.addAction(noAction)
+        
+        present(alert, animated: true)
     }
-
+    
+    private func switchToSplashViewController() {
+        DispatchQueue.main.async {
+            guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                  let sceneDelegate = windowScene.delegate as? SceneDelegate,
+                  let window = sceneDelegate.window else {
+                print("Ошибка: Не удалось найти главное окно приложения!")
+                return
+            }
+            let splashViewController = SplashViewController()
+            window.rootViewController = splashViewController
+        }
+    }
+    
     // MARK: - Private Methods
     
     private func setupUI() {
         view.backgroundColor = UIColor(named: ConstantProfileView.ProfileView.backgroundColor)
-        
-        // Добавляем сабвью на экран
         view.addSubview(avatarImageView)
         view.addSubview(nameLabel)
         view.addSubview(loginNameLabel)
@@ -135,17 +206,17 @@ final class ProfileViewController: UIViewController {
             logoutButton.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16)
         ])
     }
-
+    
     private func updateAvatar() {
         guard
             let profileImageURL = ProfileImageService.shared.avatarURL,
             let imageUrl = URL(string: profileImageURL)
         else { return }
-
+        
         let placeholderImage = UIImage(systemName: "person.circle.fill")?
             .withTintColor(.lightGray, renderingMode: .alwaysOriginal)
             .withConfiguration(UIImage.SymbolConfiguration(pointSize: 70, weight: .regular, scale: .large))
-
+        
         let processor = RoundCornerImageProcessor(cornerRadius: 35)
         avatarImageView.kf.indicatorType = .activity
         avatarImageView.kf.setImage(
@@ -159,18 +230,24 @@ final class ProfileViewController: UIViewController {
             ])
     }
     
+    
     private func updateProfileDetails(profile: Profile) {
-        nameLabel.text = profile.name.isEmpty
-            ? ConstantProfileView.ProfileView.namePlaceholder
-            : profile.name
-            
-        loginNameLabel.text = profile.loginName.isEmpty
-            ? ConstantProfileView.ProfileView.nicknamePlaceholder
-            : profile.loginName
-            
+        avatarImageView.removeSkeletonAnimation()
+        nameLabel.removeSkeletonAnimation()
+        loginNameLabel.removeSkeletonAnimation()
+        descriptionLabel.removeSkeletonAnimation()
+        
+        nameLabel.text = (profile.name.isEmpty)
+        ? ConstantProfileView.ProfileView.namePlaceholder
+        : profile.name
+        
+        loginNameLabel.text = (profile.loginName.isEmpty)
+        ? ConstantProfileView.ProfileView.nicknamePlaceholder
+        : profile.loginName
+        
         descriptionLabel.text = (profile.bio?.isEmpty ?? true)
-            ? ConstantProfileView.ProfileView.descriptionPlaceholder
-            : profile.bio
+        ? ConstantProfileView.ProfileView.descriptionPlaceholder
+        : profile.bio
         
         updateAvatar()
     }

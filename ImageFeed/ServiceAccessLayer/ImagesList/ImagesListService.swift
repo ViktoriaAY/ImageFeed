@@ -20,16 +20,6 @@ struct PhotoResult: Codable {
     let description: String?
     let urls: UrlsResult
     let likedByUser: Bool
-    
-    enum CodingKeys: String, CodingKey {
-        case id
-        case width
-        case height
-        case createdAt = "created_at"
-        case description
-        case urls
-        case likedByUser = "liked_by_user"
-    }
 }
 
 struct Photo {
@@ -47,9 +37,10 @@ struct Photo {
 final class ImagesListService {
     
     // MARK: - Properties
+    weak var delegate: ImagesListCellDelegate?
     private(set) var photos: [Photo] = []
     private var lastLoadedPage: Int?
-    
+    static let shared = ImagesListService()
     static let didChangeNotification = Notification.Name(rawValue: "ImagesListServiceDidChange")
     private let dateFormatter = ISO8601DateFormatter()
     private var task: URLSessionTask?
@@ -57,6 +48,48 @@ final class ImagesListService {
     private let logger = Logger(category: "ImagesListService")
     
     // MARK: - Public Methods
+    func changeLike(photoId: String, isLike: Bool, _ completion: @escaping (Result<Void, Error>) -> Void) {
+        assert(Thread.isMainThread)
+        task?.cancel()
+        
+        let urlString = "\(Constants.defaultBaseURLString)/photos/\(photoId)/like"
+        guard let url = URL(string: urlString) else {
+            completion(.failure(NetworkError.urlRequestError(URLError(.badURL))))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = isLike ? "POST" : "DELETE"
+        
+        if let token = tokenStorage.token {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+        struct LikeResponseResult: Codable {
+            let photo: PhotoResult
+        }
+        let task = URLSession.shared.objectTask(for: request) { [weak self] (result: Result<LikeResponseResult, Error>) in
+            DispatchQueue.main.async {
+                guard let self = self else { return }
+                self.task = nil
+                
+                switch result {
+                case .success(let response):
+                    if let index = self.photos.firstIndex(where: { $0.id == photoId }) {
+                        let newPhoto = Photo(from: response.photo, dateFormatter: self.dateFormatter)
+                        self.photos = self.photos.withReplaced(itemAt: index, newValue: newPhoto)
+                    }
+                    completion(.success(()))
+                    
+                case .failure(let error):
+                    completion(.failure(error))
+                }
+            }
+        }
+        
+        self.task = task
+        task.resume()
+    }
+    
     
     func fetchPhotosNextPage() {
         assert(Thread.isMainThread)
@@ -65,13 +98,29 @@ final class ImagesListService {
         let nextPage = (lastLoadedPage ?? 0) + 1
         logger.log("Начало загрузки страницы \(nextPage) в ImagesListService")
         
-        guard let url = URL(string: "https://unsplash.com\(nextPage)&per_page=10") else { return } 
+        guard let baseURL = URL(string: Constants.defaultBaseURLString)?.appendingPathComponent("photos"),
+              var urlComponents = URLComponents(url: baseURL, resolvingAgainstBaseURL: true) else {
+            logger.error("[ImagesListService]: Не удалось создать базовый URL")
+            return
+        }
+        
+        urlComponents.queryItems = [
+            URLQueryItem(name: "page", value: String(nextPage)),
+            URLQueryItem(name: "per_page", value: "10")
+        ]
+        
+        guard let url = urlComponents.url else {
+            logger.error("[ImagesListService]: Не удалось собрать финальный URL")
+            return
+        }
         
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         
-        if let token = tokenStorage.token {
+        if let token = tokenStorage.token, !token.isEmpty {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        } else {
+            request.setValue("Client-ID \(Constants.accessKey)", forHTTPHeaderField: "Authorization")
         }
         
         let task = URLSession.shared.objectTask(for: request) { [weak self] (result: Result<[PhotoResult], Error>) in
@@ -98,6 +147,13 @@ final class ImagesListService {
         self.task = task
         task.resume()
     }
+    
+    func clean() {
+        photos = []
+        lastLoadedPage = nil
+        task?.cancel()
+        task = nil
+    }
 }
 
 extension Photo {
@@ -115,5 +171,13 @@ extension Photo {
         self.isLiked = result.likedByUser
         self.thumbImageURL = result.urls.thumb
         self.largeImageURL = result.urls.full
+    }
+}
+
+extension Array {
+    func withReplaced(itemAt index: Int, newValue: Element) -> [Element] {
+        var modifiedArray = self
+        modifiedArray[index] = newValue
+        return modifiedArray
     }
 }

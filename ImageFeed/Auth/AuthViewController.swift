@@ -63,7 +63,7 @@ extension AuthViewController: WebViewViewControllerDelegate {
                 staticLogger.warning("AuthViewController был уничтожен в памяти")
                 return
             }
-
+            
             self.logger.debug("Получен результат сетевого запроса: \(String(describing: result))")
             
             switch result {
@@ -86,7 +86,7 @@ extension AuthViewController: WebViewViewControllerDelegate {
 extension AuthViewController {
     func showAuthErrorAlert() {
         let alertController = UIAlertController(
-            title: "Что-то пошло не так (",
+            title: "Что-то пошло не так",
             message: "Не удалось войти в систему",
             preferredStyle: .alert
         )
