@@ -6,12 +6,12 @@ final class UIBlockingProgressHUD {
         return UIApplication.shared.windows.first
     }
     
-    static func show() {
+    @MainActor static func show() {
         window?.isUserInteractionEnabled = false
         ProgressHUD.animate()
     }
 
-    static func dismiss() {
+    @MainActor static func dismiss() {
         window?.isUserInteractionEnabled = true
         ProgressHUD.dismiss()
     } 

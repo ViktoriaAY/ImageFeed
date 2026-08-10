@@ -9,10 +9,6 @@ struct ProfileImage: Codable {
 
 struct UserResult: Codable {
     let profileImage: ProfileImage
-    
-    // ВАЖНО: Мы убрали private enum CodingKeys!
-    // Теперь .convertFromSnakeCase внутри вашего objectTask автоматически свяжет
-    // свойство profileImage с ключом "profile_image" из JSON от Unsplash.
 }
 
 final class ProfileImageService {
@@ -70,6 +66,10 @@ final class ProfileImageService {
         request.httpMethod = "GET"
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         return request
+    }
+    
+    func clean() {
+        avatarURL = nil
     }
 }
 

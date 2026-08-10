@@ -44,6 +44,9 @@
                                                     </constraints>
                                                     <state key="normal" title="Button"/>
                                                     <buttonConfiguration key="configuration" style="plain" image="like_button_on"/>
+                                                    <connections>
+                                                        <action selector="likeButtonAction" destination="AYv-N3-UPg" eventType="touchUpInside" id="jzV-c3-1Tp"/>
+                                                    </connections>
                                                 </button>
                                                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="27 августа 2022" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="EH9-5A-iK3" userLabel="dateLabel">
                                                     <rect key="frame" x="24.000000000000007" y="155.33333333333334" width="101.66666666666669" height="15.666666666666657"/>
