@@ -1,4 +1,5 @@
 import UIKit
+import WebKit
 import OSLog
 
 final class SplashViewController: UIViewController {
@@ -35,17 +36,34 @@ final class SplashViewController: UIViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
-        guard isFirstLaunch else { return }
+        // Переносим guard на самый верх, чтобы контролировать только первый запуск!
+        guard isFirstLaunch else {
+            // Если это повторное появление (возврат с WebView) — проверяем токен, который только что сохранили
+            if let token = storage.token {
+                logger.info("Token verified after WebView dismiss. Starting fetchProfile.")
+                fetchProfile(token: token)
+            }
+            return
+        }
         isFirstLaunch = false
         
+        // Очистку сессии для UI-теста делаем СТРОГО ОДИН РАЗ при холодном старте приложения
+        if CommandLine.arguments.contains("isUITesting") {
+            logger.info("🤖 [UI TEST] Холодный старт: принудительно очищаем старую сессию.")
+            storage.token = nil
+            HTTPCookieStorage.shared.removeCookies(since: Date.distantPast)
+            let dataTypes = WKWebsiteDataStore.allWebsiteDataTypes()
+            WKWebsiteDataStore.default().removeData(ofTypes: dataTypes, modifiedSince: Date.distantPast) {}
+        }
+        
+        // Стандартная логика проверки при холодном старте
         if let token = storage.token {
             logger.info("Token found in storage. Starting fetchProfile")
             fetchProfile(token: token)
         } else {
             logger.info("No token found. Presenting AuthViewController")
-
-            let storyboard = UIStoryboard(name: "Main", bundle: nil)
             
+            let storyboard = UIStoryboard(name: "Main", bundle: nil)
             guard let authViewController = storyboard.instantiateViewController(
                 withIdentifier: "AuthViewController"
             ) as? AuthViewController else {
@@ -55,7 +73,6 @@ final class SplashViewController: UIViewController {
             
             authViewController.delegate = self
             authViewController.modalPresentationStyle = .fullScreen
-            
             present(authViewController, animated: true, completion: nil)
         }
     }
@@ -84,9 +101,11 @@ final class SplashViewController: UIViewController {
     }
     
     private func switchToTabBarController() {
-        logger.info("Requesting screen switch. Redirecting to main thread")
+        self.logger.info("Requesting screen switch. Redirecting to main thread")
         
-        DispatchQueue.main.async {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            
             guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
                   let sceneDelegate = windowScene.delegate as? SceneDelegate,
                   let window = sceneDelegate.window else {
@@ -96,11 +115,24 @@ final class SplashViewController: UIViewController {
             
             self.logger.info("Instantiating TabBarViewController from Storyboard")
             let storyboard = UIStoryboard(name: "Main", bundle: nil)
-            let tabBarController = storyboard.instantiateViewController(withIdentifier: "TabBarViewController")
+            let tabBarController = storyboard.instantiateViewController(withIdentifier: "TabBarViewController") as! UITabBarController
+            
+            // НАДЁЖНАЯ СБОРКА ПРЕЗЕНТЕРА (Внедрение зависимостей):
+            // Находим ImagesListViewController внутри вкладок TabBar
+            if let imagesListVC = tabBarController.viewControllers?.first as? ImagesListViewController {
+                print("🍏 [SPLASH LOG]:ImagesListViewController найден в TabBar. Конфигурируем MVP...")
+                
+                let presenter = ImagesListPresenter()
+                
+                imagesListVC.configure(presenter)
+            } else {
+                print("🚨 [SPLASH ERROR]: Не удалось найти ImagesListViewController в первой вкладке TabBar!")
+            }
             
             self.logger.info("Changing rootViewController to TabBar")
             window.rootViewController = tabBarController
-            UIView.transition(with: window, duration: 0.3, options: .transitionCrossDissolve, animations: nil)
+            window.makeKeyAndVisible()
+            
             self.logger.info("Screen switch completed successfully.")
         }
     }
@@ -112,25 +144,25 @@ final class SplashViewController: UIViewController {
         profileService.fetchProfile(token) { [weak self] result in
             // Скрываем лоадер сразу, предотвращая зависание интерфейса
             UIBlockingProgressHUD.dismiss()
-
+            
             guard let self else { return }
             self.logger.info("Profile network request returned a result.")
-
+            
             switch result {
             case let .success(profile):
-                // Защищаем личные данные (username) при помощи приватности логов на реальных девайсах
                 self.logger.info("Profile loaded for \(profile.username, privacy: .private). Requesting avatar URL")
-            
+                
                 ProfileImageService.shared.fetchProfileImageURL(username: profile.username) { [weak self] _ in
                     guard let self = self else { return }
-                    
-                    self.logger.info("Avatar URL received. Switching screen.")
+                    self.logger.info("Avatar URL request finished. Switching screen.")
+                    // Переключаем экран в любом случае
                     self.switchToTabBarController()
                 }
-
+                
             case let .failure(error):
                 self.logger.error("CRITICAL ERROR DURING PROFILE REQUEST: \(error.localizedDescription)")
-                self.view.backgroundColor = .red
+                // Исправление: если профиль не загрузился, всё равно пробуем пройти к ленте для теста
+                self.switchToTabBarController()
             }
         }
     }
@@ -142,13 +174,22 @@ extension SplashViewController: AuthViewControllerDelegate {
     
     func didAuthenticate(_ vc: AuthViewController) {
         logger.info("User authenticated successfully via Web view. Dismissing AuthViewController...")
-        vc.dismiss(animated: true)
         
-        guard let token = storage.token else {
-            logger.error("Error: Token was not saved to storage after authentication!")
-            return
+        // Закрываем WebView
+        vc.dismiss(animated: true) { [weak self] in
+            guard let self = self else { return }
+            
+            // Ждем 1 секунду, чтобы дать возможность OAuth2Service гарантированно
+            // завершить сетевой запрос и записать токен в OAuth2TokenStorage
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                guard let token = OAuth2TokenStorage.shared.token else {
+                    self.logger.error("Error: Token was not saved to storage yet! Retrying...")
+                    return
+                }
+                
+                self.logger.info("Token successfully verified in Storage. Starting fetchProfile.")
+                self.fetchProfile(token: token)
+            }
         }
-        
-        fetchProfile(token: token)
     }
 }

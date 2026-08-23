@@ -122,6 +122,7 @@
                             </scrollView>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Hxt-JI-vec">
                                 <rect key="frame" x="8" y="67" width="48" height="48"/>
+                                <accessibility key="accessibilityConfiguration" identifier="nav back button white"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="48" id="LGM-im-d3K"/>
                                     <constraint firstAttribute="width" constant="48" id="wBN-3b-EbX"/>
@@ -162,6 +163,7 @@
                     <navigationItem key="navigationItem" id="x3X-qW-8tm"/>
                     <connections>
                         <outlet property="SingleImage" destination="EGO-sg-WyD" id="Hjg-rK-ST4"/>
+                        <outlet property="backButton" destination="Hxt-JI-vec" id="cf1-fS-v3O"/>
                         <outlet property="scrollView" destination="k6g-m8-Oqb" id="M7d-p5-xbS"/>
                     </connections>
                 </viewController>
@@ -206,6 +208,7 @@
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="lNW-SU-xa3">
                                 <rect key="frame" x="16" y="646" width="361" height="48"/>
                                 <color key="backgroundColor" name="YP White (iOS)"/>
+                                <accessibility key="accessibilityConfiguration" identifier="Authenticate"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="48" id="alk-da-Z7Y"/>
                                 </constraints>
@@ -245,7 +248,7 @@
         <!--Web View View Controller-->
         <scene sceneID="Hqw-bU-IjQ">
             <objects>
-                <viewController modalPresentationStyle="fullScreen" id="P6L-Gs-Krm" customClass="WebViewViewController" customModule="ImageFeed" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="WebViewViewController" modalPresentationStyle="fullScreen" id="P6L-Gs-Krm" customClass="WebViewViewController" customModule="ImageFeed" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="JRT-fD-fX8">
                         <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
