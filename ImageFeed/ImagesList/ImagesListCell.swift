@@ -27,14 +27,14 @@ final class ImagesListCell: UITableViewCell {
     }
     
     // MARK: - func
-     func setIsLiked(isLiked: Bool) {
-        let likeImageName = isLiked ? "like_button_on" : "like_button_off"
-        guard let likeImage = UIImage(named: likeImageName) else { return }
+    func setIsLiked(isLiked: Bool) {
+        let imageName = isLiked ? "like_button_on" : "like_button_off"
+        likeButton.setImage(UIImage(named: imageName), for: .normal)
         
-        likeButton.setImage(likeImage, for: .normal)
-    }
-    
-     func startSkeleton() {
-        cellImageView.addSkeletonAnimation(cornerRadius: 16)
+        // 1. Обязательно разрешаем системе тестирования видеть эту кнопку
+        likeButton.isAccessibilityElement = true
+        
+        // 2. Строгое соответствие текстовым именам в UI-тесте (БЕЗ нижних подчеркиваний!)
+        likeButton.accessibilityIdentifier = isLiked ? "like button on" : "like button off"
     }
 }

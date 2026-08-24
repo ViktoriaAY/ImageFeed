@@ -88,9 +88,9 @@ final class ImagesListViewController: UIViewController, ImagesListViewController
     private func setupTableView() {
         tableView.delegate = self
         tableView.dataSource = self
-        tableView.contentInset = UIEdgeInsets(top: 12, left: 0, bottom: 12, right: 0)
         
-        // ДОБАВЛЕНО ДЛЯ UI-ТЕСТОВ: даем таблице имя, которое ищет тест
+        // Возвращаем стандартные системные отступы
+        tableView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: 12, right: 0)
         tableView.accessibilityIdentifier = "ImagesListTable"
     }
     

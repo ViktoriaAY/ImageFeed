@@ -36,47 +36,48 @@ final class SplashViewController: UIViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
-        // Переносим guard на самый верх, чтобы контролировать только первый запуск!
-        guard isFirstLaunch else {
-            // Если это повторное появление (возврат с WebView) — проверяем токен, который только что сохранили
-            if let token = storage.token {
-                logger.info("Token verified after WebView dismiss. Starting fetchProfile.")
-                fetchProfile(token: token)
-            }
-            return
-        }
+        guard isFirstLaunch else { return }
         isFirstLaunch = false
         
-        // Очистку сессии для UI-теста делаем СТРОГО ОДИН РАЗ при холодном старте приложения
-        if CommandLine.arguments.contains("isUITesting") {
-            logger.info("🤖 [UI TEST] Холодный старт: принудительно очищаем старую сессию.")
+        // Проверяем, передан ли флаг очистки для UI-теста
+        if CommandLine.arguments.contains("clearSessionForTesting") {
+            logger.info("🤖 [UI TEST] Тест авторизации: принудительно очищаем сессию.")
             storage.token = nil
+            
             HTTPCookieStorage.shared.removeCookies(since: Date.distantPast)
             let dataTypes = WKWebsiteDataStore.allWebsiteDataTypes()
-            WKWebsiteDataStore.default().removeData(ofTypes: dataTypes, modifiedSince: Date.distantPast) {}
-        }
-        
-        // Стандартная логика проверки при холодном старте
-        if let token = storage.token {
-            logger.info("Token found in storage. Starting fetchProfile")
-            fetchProfile(token: token)
-        } else {
-            logger.info("No token found. Presenting AuthViewController")
             
-            let storyboard = UIStoryboard(name: "Main", bundle: nil)
-            guard let authViewController = storyboard.instantiateViewController(
-                withIdentifier: "AuthViewController"
-            ) as? AuthViewController else {
-                assertionFailure("Failed to instantiate AuthViewController from Storyboard")
-                return
+            // ВАЖНО: вызываем показ экрана только ТОГДА, когда куки очищены!
+            WKWebsiteDataStore.default().removeData(ofTypes: dataTypes, modifiedSince: Date.distantPast) { [weak self] in
+                DispatchQueue.main.async {
+                    self?.logger.info("🤖 [UI TEST] Очистка куки завершена. Показываем AuthViewController.")
+                    self?.presentAuthViewController()
+                }
             }
-            
-            authViewController.delegate = self
-            authViewController.modalPresentationStyle = .fullScreen
-            present(authViewController, animated: true, completion: nil)
+        } else {
+            // Стандартная логика обычного запуска приложения
+            if let token = storage.token {
+                logger.info("Token found in storage. Starting fetchProfile")
+                fetchProfile(token: token)
+            } else {
+                logger.info("No token found. Presenting AuthViewController")
+                presentAuthViewController()
+            }
         }
     }
-    
+
+       
+       // Вспомогательный метод для чистоты кода, чтобы не дублировать логику создания экрана входа
+    private func presentAuthViewController() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            let storyboard = UIStoryboard(name: "Main", bundle: nil)
+            guard let authViewController = storyboard.instantiateViewController(withIdentifier: "AuthViewController") as? AuthViewController else { return }
+            authViewController.delegate = self
+            authViewController.modalPresentationStyle = .fullScreen
+            self.present(authViewController, animated: true, completion: nil)
+        }
+    }
     // MARK: - Overrides
     
     override var preferredStatusBarStyle: UIStatusBarStyle {
@@ -101,39 +102,37 @@ final class SplashViewController: UIViewController {
     }
     
     private func switchToTabBarController() {
-        self.logger.info("Requesting screen switch. Redirecting to main thread")
-        
-        DispatchQueue.main.async { [weak self] in
-            guard let self = self else { return }
-            
+        DispatchQueue.main.async {
             guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
                   let sceneDelegate = windowScene.delegate as? SceneDelegate,
-                  let window = sceneDelegate.window else {
-                self.logger.error("Failed to find main window via SceneDelegate!")
-                return
-            }
+                  let window = sceneDelegate.window else { return }
             
-            self.logger.info("Instantiating TabBarViewController from Storyboard")
             let storyboard = UIStoryboard(name: "Main", bundle: nil)
             let tabBarController = storyboard.instantiateViewController(withIdentifier: "TabBarViewController") as! UITabBarController
             
-            // НАДЁЖНАЯ СБОРКА ПРЕЗЕНТЕРА (Внедрение зависимостей):
-            // Находим ImagesListViewController внутри вкладок TabBar
+            // 1. НАСТРОЙКА ЛЕНТЫ (Это у вас уже работает)
             if let imagesListVC = tabBarController.viewControllers?.first as? ImagesListViewController {
-                print("🍏 [SPLASH LOG]:ImagesListViewController найден в TabBar. Конфигурируем MVP...")
-                
                 let presenter = ImagesListPresenter()
-                
                 imagesListVC.configure(presenter)
-            } else {
-                print("🚨 [SPLASH ERROR]: Не удалось найти ImagesListViewController в первой вкладке TabBar!")
             }
             
-            self.logger.info("Changing rootViewController to TabBar")
+            // 2. ДОБАВЬТЕ ЭТОТ БЛОК ДЛЯ ПРОФИЛЯ:
+            // Ищем ProfileViewController среди вкладок (обычно он второй, то есть .last или по индексу)
+            if let profileVC = tabBarController.viewControllers?.last as? ProfileViewController {
+                print("🍏 [SPLASH LOG]: ProfileViewController найден в TabBar. Конфигурируем MVP...")
+                
+                // Создаем презентер для профиля
+                let presenter = ProfilePresenter()
+                
+                // Связываем их (убедитесь, что метод configure прописан в ProfileViewController)
+                profileVC.presenter = presenter
+                presenter.view = profileVC
+            } else {
+                print("🚨 [SPLASH ERROR]: Не удалось найти ProfileViewController во вкладках таббара!")
+            }
+            
             window.rootViewController = tabBarController
             window.makeKeyAndVisible()
-            
-            self.logger.info("Screen switch completed successfully.")
         }
     }
     
@@ -171,25 +170,25 @@ final class SplashViewController: UIViewController {
 // MARK: - AuthViewControllerDelegate
 
 extension SplashViewController: AuthViewControllerDelegate {
-    
     func didAuthenticate(_ vc: AuthViewController) {
-        logger.info("User authenticated successfully via Web view. Dismissing AuthViewController...")
+        logger.info("[SplashVC]: Пользователь успешно авторизовался на Web-экране. Начинаем закрытие...")
         
-        // Закрываем WebView
+        // Передаем логику получения профиля строго в блок completion метода dismiss!
         vc.dismiss(animated: true) { [weak self] in
             guard let self = self else { return }
             
-            // Ждем 1 секунду, чтобы дать возможность OAuth2Service гарантированно
-            // завершить сетевой запрос и записать токен в OAuth2TokenStorage
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                guard let token = OAuth2TokenStorage.shared.token else {
-                    self.logger.error("Error: Token was not saved to storage yet! Retrying...")
-                    return
-                }
-                
-                self.logger.info("Token successfully verified in Storage. Starting fetchProfile.")
-                self.fetchProfile(token: token)
+            logger.info("[SplashVC]: Экран авторизации полностью скрылся. Проверяем токен...")
+            guard let token = self.storage.token else {
+                self.logger.error("[SplashVC] Ошибка: После авторизации токен не сохранился!")
+                return
             }
+            
+            // Запускаем загрузку профиля и переход на ТабБар
+            self.fetchProfile(token: token)
         }
     }
 }
+
+    
+    
+ 

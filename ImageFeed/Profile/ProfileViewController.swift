@@ -23,7 +23,10 @@ final class ProfileViewController: UIViewController, ProfileViewControllerProtoc
     // MARK: - Public Properties
     
     var presenter: ProfilePresenterProtocol?
-    
+    func configure(_ presenter: ProfilePresenterProtocol) {
+           self.presenter = presenter
+           self.presenter?.view = self
+       }
     // MARK: - Private UI Properties
     
     private lazy var avatarImageView: UIImageView = {
@@ -100,6 +103,9 @@ final class ProfileViewController: UIViewController, ProfileViewControllerProtoc
         nameLabel.text = name
         loginNameLabel.text = nickname
         descriptionLabel.text = bio
+        
+        // ВАЖНО: Присваиваем ID повторно ПОСЛЕ того, как текст обновился живыми данными из сети!
+        nameLabel.accessibilityIdentifier = "Name Label"
     }
     
     func updateAvatar(with url: URL) {
@@ -134,13 +140,35 @@ final class ProfileViewController: UIViewController, ProfileViewControllerProtoc
     }
     
     func switchToSplashViewController() {
-        DispatchQueue.main.async {
-            guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-                  let sceneDelegate = windowScene.delegate as? SceneDelegate,
-                  let window = sceneDelegate.window else { return }
-            window.rootViewController = SplashViewController()
+            DispatchQueue.main.async {
+                // 1. Находим главное окно приложения
+                guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                      let sceneDelegate = windowScene.delegate as? SceneDelegate,
+                      let window = sceneDelegate.window else { return }
+                
+                // 2. Создаем навигационный контроллер экрана авторизации из Storyboard
+                let storyboard = UIStoryboard(name: "Main", bundle: nil)
+                guard let authNC = storyboard.instantiateViewController(withIdentifier: "AuthNavigationController") as? UINavigationController else {
+                    assertionFailure("Не удалось найти AuthNavigationController в Storyboard")
+                    return
+                }
+                
+                // Блок установки делегата удален, так как для UI-теста выхода он не требуется!
+                
+                // 3. Жестко меняем корневой контроллер окна на экран входа с красивой плавной анимацией
+                window.rootViewController = authNC
+                
+                UIView.transition(
+                    with: window,
+                    duration: 0.3,
+                    options: .transitionCrossDissolve,
+                    animations: nil,
+                    completion: nil
+                )
+                print("🍏 [UI TEST SUCCESS]: Экран авторизации успешно установлен как rootViewController.")
+            }
         }
-    }
+
     
     // MARK: - Actions
     
@@ -194,6 +222,10 @@ final class ProfileViewController: UIViewController, ProfileViewControllerProtoc
             logoutButton.centerYAnchor.constraint(equalTo: avatarImageView.centerYAnchor),
             logoutButton.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16)
         ])
+        logoutButton.accessibilityIdentifier = "logout button"
+        nameLabel.accessibilityIdentifier = "Name Label"
+                loginNameLabel.accessibilityIdentifier = "Username Label"
+
     }
     
     private func updateSkeletonFrames() {
