@@ -23,12 +23,19 @@ final class AuthViewController: UIViewController {
     }
     
     // MARK: - Overrides
+
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == showWebViewSegueIdentifier {
-            guard let webViewViewController = segue.destination as? WebViewViewController else {
+            guard
+                let webViewViewController = segue.destination as? WebViewViewController
+            else {
                 assertionFailure("Failed to prepare for \(showWebViewSegueIdentifier)")
                 return
             }
+            let authHelper = AuthHelper()
+            let webViewPresenter = WebViewPresenter(authHelper: authHelper)
+            webViewViewController.presenter = webViewPresenter
+            webViewPresenter.view = webViewViewController
             webViewViewController.delegate = self
         } else {
             super.prepare(for: segue, sender: sender)
@@ -52,31 +59,44 @@ extension AuthViewController: WebViewViewControllerDelegate {
     }
     
     func webViewViewController(_ vc: WebViewViewController, didAuthenticateWithCode code: String) {
-        vc.dismiss(animated: true)
-        UIBlockingProgressHUD.show()
-        logger.debug("Начинаем обмен кода на токен")
-        
-        oauth2Service.fetchOAuthToken(with: code) { [weak self] result in
-            UIBlockingProgressHUD.dismiss()
-            guard let self else {
-                let staticLogger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.imagefeed", category: "Auth")
-                staticLogger.warning("AuthViewController был уничтожен в памяти")
-                return
-            }
+        // 1. Сначала закрываем WebView контроллер
+        vc.dismiss(animated: true) { [weak self] in
+            guard let self = self else { return }
             
-            self.logger.debug("Получен результат сетевого запроса: \(String(describing: result))")
+            // 2. Показываем лоадер блокировки интерфейса
+            UIBlockingProgressHUD.show()
+            self.logger.debug("Начинаем обмен кода на токен в сети...")
             
-            switch result {
-            case .success(let token):
-                self.logger.info("Токен успешно получен")
-                OAuth2TokenStorage.shared.token = token
+            // 3. Делаем сетевой запрос к Unsplash за токеном
+            self.oauth2Service.fetchOAuthToken(with: code) { [weak self] result in
+                // Сразу убираем лоадер на главном потоке
+                UIBlockingProgressHUD.dismiss()
                 
-                self.logger.debug("Вызываем метод делегата didAuthenticate")
-                self.delegate?.didAuthenticate(self)
+                guard let self = self else { return }
+                self.logger.debug("Получен результат сетевого запроса обмена токена: \(String(describing: result))")
                 
-            case .failure(let error):
-                self.logger.error("Сетевая ошибка авторизации: \(error.localizedDescription)")
-                self.showAuthErrorAlert()
+                switch result {
+                case .success(let token):
+                    self.logger.info("Токен успешно получен от Unsplash!")
+                    
+                    // КРИТИЧЕСКИ ВАЖНО: Сначала железно записываем токен в память!
+                    OAuth2TokenStorage.shared.token = token
+                    
+                    // ПРИНТ 2: Проверяем, прочитался ли он сразу после записи
+                    if let check = OAuth2TokenStorage.shared.token {
+                        print("🍏 [UI TEST STORAGE SUCCESS]: Токен успешно сохранен в памяти: \(check)")
+                    } else {
+                        print("🚨 [UI TEST STORAGE ERROR]: Токен пришел из сети, но STORAGE вернул nil после записи!")
+                    }
+                    
+                    // И ТОЛЬКО ПОСЛЕ ЭТОГО уведомляем SplashViewController, что вход выполнен!
+                    self.logger.debug("Токен в памяти. Вызываем метод делегата didAuthenticate")
+                    self.delegate?.didAuthenticate(self)
+                    
+                case .failure(let error):
+                    self.logger.error("Сетевая ошибка авторизации: \(error.localizedDescription)")
+                    self.showAuthErrorAlert()
+                }
             }
         }
     }

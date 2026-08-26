@@ -27,14 +27,10 @@ final class ImagesListCell: UITableViewCell {
     }
     
     // MARK: - func
-     func setIsLiked(isLiked: Bool) {
-        let likeImageName = isLiked ? "like_button_on" : "like_button_off"
-        guard let likeImage = UIImage(named: likeImageName) else { return }
-        
-        likeButton.setImage(likeImage, for: .normal)
-    }
-    
-     func startSkeleton() {
-        cellImageView.addSkeletonAnimation(cornerRadius: 16)
+    func setIsLiked(isLiked: Bool) {
+        let imageName = isLiked ? "like_button_on" : "like_button_off"
+        likeButton.setImage(UIImage(named: imageName), for: .normal)
+        likeButton.isAccessibilityElement = true
+        likeButton.accessibilityIdentifier = isLiked ? "like button on" : "like button off"
     }
 }

@@ -43,14 +43,15 @@ final class ImagesListService {
     static let shared = ImagesListService()
     static let didChangeNotification = Notification.Name(rawValue: "ImagesListServiceDidChange")
     private let dateFormatter = ISO8601DateFormatter()
-    private var task: URLSessionTask?
+    private var fetchPhotosTask: URLSessionTask?
+    private var changeLikeTask: URLSessionTask?
     private let tokenStorage = OAuth2TokenStorage.shared
     private let logger = Logger(category: "ImagesListService")
     
     // MARK: - Public Methods
     func changeLike(photoId: String, isLike: Bool, _ completion: @escaping (Result<Void, Error>) -> Void) {
         assert(Thread.isMainThread)
-        task?.cancel()
+        changeLikeTask?.cancel()
         
         let urlString = "\(Constants.defaultBaseURLString)/photos/\(photoId)/like"
         guard let url = URL(string: urlString) else {
@@ -60,100 +61,110 @@ final class ImagesListService {
         
         var request = URLRequest(url: url)
         request.httpMethod = isLike ? "POST" : "DELETE"
-        
         if let token = tokenStorage.token {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+            logger.log("[ImagesListService]: Отправка лайка с токеном. Метод: \(request.httpMethod ?? "")")
+        } else {
+            logger.error("[ImagesListService ERROR]: Попытка поставить лайк БЕЗ ТОКЕНА!")
         }
+        
         struct LikeResponseResult: Codable {
             let photo: PhotoResult
         }
+        
         let task = URLSession.shared.objectTask(for: request) { [weak self] (result: Result<LikeResponseResult, Error>) in
             DispatchQueue.main.async {
                 guard let self = self else { return }
-                self.task = nil
+                self.changeLikeTask = nil
                 
                 switch result {
                 case .success(let response):
                     if let index = self.photos.firstIndex(where: { $0.id == photoId }) {
                         let newPhoto = Photo(from: response.photo, dateFormatter: self.dateFormatter)
                         self.photos = self.photos.withReplaced(itemAt: index, newValue: newPhoto)
+                        self.logger.log("[ImagesListService]: Статус лайка успешно обновлен на сервере: \(newPhoto.isLiked)")
                     }
                     completion(.success(()))
                     
                 case .failure(let error):
+                    self.logger.error("[ImagesListService ERROR]: Не удалось изменить статус лайка на сервере: \(error.localizedDescription)")
                     completion(.failure(error))
                 }
             }
         }
         
-        self.task = task
+        self.changeLikeTask = task
         task.resume()
+        
     }
     
     
     func fetchPhotosNextPage() {
-        assert(Thread.isMainThread)
-        guard task == nil else { return }
-        
-        let nextPage = (lastLoadedPage ?? 0) + 1
-        logger.log("Начало загрузки страницы \(nextPage) в ImagesListService")
-        
-        guard let baseURL = URL(string: Constants.defaultBaseURLString)?.appendingPathComponent("photos"),
-              var urlComponents = URLComponents(url: baseURL, resolvingAgainstBaseURL: true) else {
-            logger.error("[ImagesListService]: Не удалось создать базовый URL")
-            return
-        }
-        
-        urlComponents.queryItems = [
-            URLQueryItem(name: "page", value: String(nextPage)),
-            URLQueryItem(name: "per_page", value: "10")
-        ]
-        
-        guard let url = urlComponents.url else {
-            logger.error("[ImagesListService]: Не удалось собрать финальный URL")
-            return
-        }
-        
-        var request = URLRequest(url: url)
-        request.httpMethod = "GET"
-        
-        if let token = tokenStorage.token, !token.isEmpty {
-            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        } else {
-            request.setValue("Client-ID \(Constants.accessKey)", forHTTPHeaderField: "Authorization")
-        }
-        
-        let task = URLSession.shared.objectTask(for: request) { [weak self] (result: Result<[PhotoResult], Error>) in
-            DispatchQueue.main.async {
-                guard let self = self else { return }
-                
-                switch result {
-                case .success(let photoResults):
-                    let newPhotos = photoResults.map { Photo(from: $0, dateFormatter: self.dateFormatter) }
-                    self.photos.append(contentsOf: newPhotos)
-                    self.lastLoadedPage = nextPage
-                    
-                    NotificationCenter.default.post(
-                        name: ImagesListService.didChangeNotification,
-                        object: self
-                    )
-                    
-                case .failure(let error):
-                    self.logger.error("[ImagesListService]: Ошибка загрузки страницы \(nextPage) - \(error.localizedDescription)")
-                }
-                self.task = nil
-            }
-        }
-        self.task = task
-        task.resume()
-    }
+           assert(Thread.isMainThread)
+           guard fetchPhotosTask == nil else { return }
+           
+           let nextPage = (lastLoadedPage ?? 0) + 1
+           logger.log("Начало загрузки страницы \(nextPage) в ImagesListService")
+           
+           guard let baseURL = URL(string: Constants.defaultBaseURLString)?.appendingPathComponent("photos"),
+                 var urlComponents = URLComponents(url: baseURL, resolvingAgainstBaseURL: true) else {
+               logger.error("[ImagesListService]: Не удалось создать базовый URL")
+               return
+           }
+           
+           urlComponents.queryItems = [
+               URLQueryItem(name: "page", value: String(nextPage)),
+               URLQueryItem(name: "per_page", value: "10")
+           ]
+           
+           guard let url = urlComponents.url else {
+               logger.error("[ImagesListService]: Не удалось собрать финальный URL")
+               return
+           }
+           
+           var request = URLRequest(url: url)
+           request.httpMethod = "GET"
+           
+           if let token = tokenStorage.token, !token.isEmpty {
+               request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+           } else {
+               request.setValue("Client-ID \(Constants.accessKey)", forHTTPHeaderField: "Authorization")
+           }
+           
+           // В локальную константу записываем таск
+           let task = URLSession.shared.objectTask(for: request) { [weak self] (result: Result<[PhotoResult], Error>) in
+               DispatchQueue.main.async {
+                   guard let self = self else { return }
+                   
+                   switch result {
+                   case .success(let photoResults):
+                       let newPhotos = photoResults.map { Photo(from: $0, dateFormatter: self.dateFormatter) }
+                       self.photos.append(contentsOf: newPhotos)
+                       self.lastLoadedPage = nextPage
+                       
+                       NotificationCenter.default.post(
+                           name: ImagesListService.didChangeNotification,
+                           object: self
+                       )
+                       
+                   case .failure(let error):
+                       self.logger.error("[ImagesListService]: Ошибка загрузки страницы \(nextPage) - \(error.localizedDescription)")
+                   }
+                   self.fetchPhotosTask = nil
+               }
+           }
+           self.fetchPhotosTask = task
+           task.resume()
+       }
     
     func clean() {
-        photos = []
-        lastLoadedPage = nil
-        task?.cancel()
-        task = nil
-    }
+            photos = []
+            lastLoadedPage = nil
+            fetchPhotosTask?.cancel()
+            fetchPhotosTask = nil
+            changeLikeTask?.cancel()
+            changeLikeTask = nil
+        }
 }
 
 extension Photo {

@@ -7,6 +7,7 @@ final class SingleImageViewController: UIViewController {
     
     @IBOutlet private weak var singleImage: UIImageView!
     @IBOutlet private weak var scrollView: UIScrollView!
+    @IBOutlet private weak var backButton: UIButton!
     
     // MARK: - Properties
     var image: UIImage?
@@ -18,6 +19,7 @@ final class SingleImageViewController: UIViewController {
         super.viewDidLoad()
         setupScrollView()
         loadFullImage()
+        backButton.accessibilityIdentifier = "nav back button white"
     }
     
     // MARK: - IBAction
