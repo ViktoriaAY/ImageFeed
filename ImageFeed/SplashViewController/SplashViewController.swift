@@ -55,7 +55,6 @@ final class SplashViewController: UIViewController {
                 }
             }
         } else {
-            // Стандартная логика обычного запуска приложения
             if let token = storage.token {
                 logger.info("Token found in storage. Starting fetchProfile")
                 fetchProfile(token: token)
@@ -66,8 +65,6 @@ final class SplashViewController: UIViewController {
         }
     }
 
-       
-       // Вспомогательный метод для чистоты кода, чтобы не дублировать логику создания экрана входа
     private func presentAuthViewController() {
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
@@ -109,22 +106,13 @@ final class SplashViewController: UIViewController {
             
             let storyboard = UIStoryboard(name: "Main", bundle: nil)
             let tabBarController = storyboard.instantiateViewController(withIdentifier: "TabBarViewController") as! UITabBarController
-            
-            // 1. НАСТРОЙКА ЛЕНТЫ (Это у вас уже работает)
             if let imagesListVC = tabBarController.viewControllers?.first as? ImagesListViewController {
                 let presenter = ImagesListPresenter()
                 imagesListVC.configure(presenter)
             }
-            
-            // 2. ДОБАВЬТЕ ЭТОТ БЛОК ДЛЯ ПРОФИЛЯ:
-            // Ищем ProfileViewController среди вкладок (обычно он второй, то есть .last или по индексу)
             if let profileVC = tabBarController.viewControllers?.last as? ProfileViewController {
                 print("🍏 [SPLASH LOG]: ProfileViewController найден в TabBar. Конфигурируем MVP...")
-                
-                // Создаем презентер для профиля
                 let presenter = ProfilePresenter()
-                
-                // Связываем их (убедитесь, что метод configure прописан в ProfileViewController)
                 profileVC.presenter = presenter
                 presenter.view = profileVC
             } else {
@@ -141,7 +129,6 @@ final class SplashViewController: UIViewController {
         UIBlockingProgressHUD.show()
         
         profileService.fetchProfile(token) { [weak self] result in
-            // Скрываем лоадер сразу, предотвращая зависание интерфейса
             UIBlockingProgressHUD.dismiss()
             
             guard let self else { return }
@@ -160,7 +147,6 @@ final class SplashViewController: UIViewController {
                 
             case let .failure(error):
                 self.logger.error("CRITICAL ERROR DURING PROFILE REQUEST: \(error.localizedDescription)")
-                // Исправление: если профиль не загрузился, всё равно пробуем пройти к ленте для теста
                 self.switchToTabBarController()
             }
         }
@@ -172,8 +158,6 @@ final class SplashViewController: UIViewController {
 extension SplashViewController: AuthViewControllerDelegate {
     func didAuthenticate(_ vc: AuthViewController) {
         logger.info("[SplashVC]: Пользователь успешно авторизовался на Web-экране. Начинаем закрытие...")
-        
-        // Передаем логику получения профиля строго в блок completion метода dismiss!
         vc.dismiss(animated: true) { [weak self] in
             guard let self = self else { return }
             
@@ -183,7 +167,6 @@ extension SplashViewController: AuthViewControllerDelegate {
                 return
             }
             
-            // Запускаем загрузку профиля и переход на ТабБар
             self.fetchProfile(token: token)
         }
     }

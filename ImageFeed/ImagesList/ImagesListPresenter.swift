@@ -30,7 +30,6 @@ final class ImagesListPresenter: ImagesListViewPresenterProtocol {
             imagesListService.fetchPhotosNextPage()
         }
      else {
-                // Если картинки уже были в памяти, принудительно говорим UI обновиться
                 self.view?.updateTableViewAnimated(oldCount: 0, newCount: photos.count)
             }
 
@@ -56,24 +55,16 @@ final class ImagesListPresenter: ImagesListViewPresenterProtocol {
     
     func changeLike(at indexPath: IndexPath, completion: @escaping (Result<Void, Error>) -> Void) {
             let photo = photos[indexPath.row]
-            
-            // Передаем инвертированное значение лайка (!photo.isLiked) в сервис
             imagesListService.changeLike(photoId: photo.id, isLike: !photo.isLiked) { [weak self] result in
                 guard let self = self else { return }
-                
-                // Вся работа с UI и вызов completion ОБЯЗАТЕЛЬНО должны быть на главном потоке
                 DispatchQueue.main.async {
                     switch result {
                     case .success:
-                        // Берем уже обновленную модель фото из массива
                         let updatedPhoto = self.photos[indexPath.row]
-                        
-                        // Обновляем визуальное состояние ячейки
                         self.view?.setCellLiked(at: indexPath, isLiked: updatedPhoto.isLiked)
                         completion(.success(()))
                         
                     case .failure(let error):
-                        // Показываем алерт в случае ошибки сети
                         self.view?.showLikeErrorAlert()
                         completion(.failure(error))
                     }

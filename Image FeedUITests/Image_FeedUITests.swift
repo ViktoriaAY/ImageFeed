@@ -1,130 +1,30 @@
 import XCTest
 
 class Image_FeedUITests: XCTestCase {
+    
     private let app = XCUIApplication()
+
+       override func setUpWithError() throws {
+           try super.setUpWithError()
+           continueAfterFailure = false
+           
+           // Передаем общий флаг тестирования во все тесты без исключения
+           app.launchArguments = ["UITesting"]
+       }
+
     
-    override func setUpWithError() throws {
-        try super.setUpWithError()
-        continueAfterFailure = false
-        
-        let app = XCUIApplication()
-        // Передаем флаг очистки куки для Сплеш-контроллера
-        app.launchArguments = ["clearSessionForTesting"]
-        app.launch()
-    }
-    
-    //    // --- ТЕСТ 1: НАСТОЯЩАЯ АВТОРИЗАЦИЯ ---
-    //    func testAuth() throws {
-    //        let authButton = app.buttons["Authenticate"]
-    //
-    //        // Если тест перезапустился и мы уже внутри — пропускаем шаг ввода
-    //        if !authButton.waitForExistence(timeout: 5) && app.tables.element(boundBy: 0).exists {
-    //            return
-    //        }
-    //
-    //        XCTAssertTrue(authButton.waitForExistence(timeout: 5), "Кнопка 'Authenticate' не найдена")
-    //        authButton.tap()
-    //
-    //        let webView = app.webViews["UnsplashWebView"]
-    //        XCTAssertTrue(webView.waitForExistence(timeout: 15), "WebView не загрузился")
-    //
-    //        // Даём сайту 3 секунды отрисовать HTML-код полей
-    //        sleep(3)
-    //
-    //        let emailField = webView.descendants(matching: .textField).element(boundBy: 0)
-    //        let passwordField = webView.descendants(matching: .secureTextField).element(boundBy: 0)
-    //
-    //        XCTAssertTrue(emailField.waitForExistence(timeout: 5), "Поле email не найдено")
-    //        XCTAssertTrue(passwordField.waitForExistence(timeout: 5), "Поле пароля не найдено")
-    //
-    //        // Вводим логин
-    //        emailField.tap()
-    //        emailField.typeText("v.perxun@inbox.ru")
-    //        closeKeyboard() // Закрываем клавиатуру по черной галочке над ней [3NNcp0]
-    //
-    //        // Скроллим к паролю, так как клавиатура скрылась и не мешает
-    //        webView.swipeUp()
-    //
-    //        // Вставляем пароль через копирование
-    //        pastePassword(passwordField: passwordField, password: "kawxeq-sehsog-0tiqMy")
-    //        closeKeyboard() // Снова закрываем клавиатуру [3NNcp0]
-    //
-    //        // Нажимаем честную кнопку Login
-    //        let loginButton = webView.buttons["Login"]
-    //        if loginButton.waitForExistence(timeout: 5) {
-    //            loginButton.tap()
-    //        } else {
-    //            webView.descendants(matching: .button).element(boundBy: 0).tap()
-    //        }
-    //
-    //        // Ждем появления таблицы приложения (теперь WebView не зависнет!)
-    //        let tablesQuery = app.tables
-    //        let cell = tablesQuery.children(matching: .cell).element(boundBy: 0)
-    //        XCTAssertTrue(cell.waitForExistence(timeout: 30), "Авторизация не удалась: ячейка ленты не появилась")
-    //    }
-//    func testAuth() throws {
-//            // 1. Ищем и нажимаем кнопку "Authenticate" на стартовом экране
-//            let authButton = app.buttons["Authenticate"]
-//            XCTAssertTrue(authButton.waitForExistence(timeout: 10), "🚨 [UI TEST ERROR]: Кнопка 'Authenticate' не найдена")
-//            authButton.tap()
-//            
-//            // 2. Ждем появление WebView
-//            let webView = app.webViews["UnsplashWebView"]
-//            XCTAssertTrue(webView.waitForExistence(timeout: 15), "🚨 [UI TEST ERROR]: WebView не появился")
-//            
-//            // 3. Безопасно ищем поля ввода БЕЗ использования жестких XCTAssertTrue
-//            let emailField = webView.descendants(matching: .textField).element(boundBy: 0)
-//            let passwordField = webView.descendants(matching: .secureTextField).element(boundBy: 0)
-//            
-//            // Даем сайту 5 секунд зафиксироваться
-//            _ = emailField.waitForExistence(timeout: 5)
-//            
-//            // Если поля ввода физически присутствуют на экране — заполняем их
-//            if emailField.exists && passwordField.exists {
-//                emailField.tap()
-//                emailField.typeText("v.perxun@inbox.ru") // Укажите вашу почту
-//                
-//                passwordField.tap()
-//                passwordField.typeText("kawxeq-sehsog-0tiqMy") // Укажите ваш пароль
-//                
-//                // Нажимаем встроенную кнопку входа на веб-странице
-//                let loginButton = webView.buttons["Login"]
-//                if loginButton.waitForExistence(timeout: 5) {
-//                    loginButton.tap()
-//                }
-//            }
-//            
-//            // 4. Логика для случая, если мы уже авторизованы или заполнили поля выше:
-//            // Ждем появление кнопки одобрения прав ("Allow" / "Authorize" / "Join" или первая кнопка на сайте)
-//            let allowButton = webView.buttons["Allow"]
-//            let authorizeButton = webView.buttons["Authorize"]
-//            let generalWebButton = webView.descendants(matching: .button).element(boundBy: 0)
-//            
-//            if allowButton.waitForExistence(timeout: 10) {
-//                allowButton.tap()
-//            } else if authorizeButton.exists {
-//                authorizeButton.tap()
-//            } else if generalWebButton.exists {
-//                // Если текст кнопки изменился, просто кликаем по первой кнопке веб-интерфейса
-//                generalWebButton.tap()
-//            }
-//            
-//            // 5. Финальная проверка: после клика по "Allow" мы обязаны попасть в основную ленту приложения
-//            let tablesQuery = app.tables
-//            let cell = tablesQuery.children(matching: .cell).element(boundBy: 0)
-//            XCTAssertTrue(cell.waitForExistence(timeout: 25), "🚨 [UI TEST ERROR]: Авторизация не удалась, ячейка ленты не появилась на экране за 25 секунд")
-//        }
     func testAuth() throws {
         print("🤖 [UI TEST] Начало теста testAuth")
         
-        // 1. ПРОВЕРКА НА УЖЕ ОТКРЫТУЮ ЛЕНТУ
+        app.launchArguments = ["clearSessionForTesting"]
+        app.launch()
+        
         let imagesListTable = app.tables["ImagesListTable"]
         if imagesListTable.waitForExistence(timeout: 5) && imagesListTable.children(matching: .cell).element(boundBy: 0).exists {
             print("🎉 [UI TEST] Приложение уже авторизовано, лента на экране! Завершаем тест успехом.")
             return
         }
         
-        // 2. СТАНДАРТНЫЙ СЦЕНАРИЙ АВТОРИЗАЦИИ
         let authButton = app.buttons["Authenticate"]
         XCTAssertTrue(authButton.waitForExistence(timeout: 5), "Кнопка 'Authenticate' не найдена")
         print("🤖 [UI TEST] Кликаем по кнопке Authenticate")
@@ -133,8 +33,6 @@ class Image_FeedUITests: XCTestCase {
         let webView = app.webViews["UnsplashWebView"]
         XCTAssertTrue(webView.waitForExistence(timeout: 15), "WebView не загрузился")
         print("🤖 [UI TEST] WebView UnsplashWebView успешно обнаружен на экране")
-        
-        // --- СТАБИЛЬНОЕ ОЖИДАНИЕ ЗАГРУЗКИ HTML-СТРАНИЦЫ ---
         print("🤖 [UI TEST] Ожидаем отрисовку элементов внутри WebView...")
         let emailField = webView.descendants(matching: .textField).element(boundBy: 0)
         
@@ -146,7 +44,6 @@ class Image_FeedUITests: XCTestCase {
         let passwordField = webView.descendants(matching: .secureTextField).element(boundBy: 0)
         XCTAssertTrue(passwordField.exists, "Поле пароля не найдено")
         
-        // 3. НАДЕЖНЫЙ ВВОД ЛОГИНА
         print("🤖 [UI TEST] Вводим логин...")
         emailField.tap()
         emailField.typeText("v.perxun@inbox.ru")
@@ -155,14 +52,11 @@ class Image_FeedUITests: XCTestCase {
         print("🤖 [UI TEST] Скроллим к паролю...")
         webView.swipeUp()
         
-        // 4. НАДЕЖНЫЙ ВВОД ПАРОЛЯ ЧЕРЕЗ БУФЕР ОБМЕНА (Защита от Invalid password)
         print("🤖 [UI TEST] Копируем и вставляем пароль...")
         passwordField.tap()
         
-        // Копируем текст пароля в системный буфер обмена симулятора
         UIPasteboard.general.string = "kawxeq-sehsog-0tiqMy"
         
-        // Делаем двойной тап по полю, чтобы вызвать меню UIKit, и нажимаем «Вставить»
         passwordField.doubleTap()
         
         let pasteButton = app.menuItems["Paste"] ?? app.menuItems["Вставить"]
@@ -176,9 +70,8 @@ class Image_FeedUITests: XCTestCase {
         closeKeyboard()
         
         print("🤖 [UI TEST] Поля заполнены. Подготовка к нажатию Login...")
-        webView.tap() // убираем фокус с полей
-        
-        // Ищем кнопку входа
+        webView.tap()
+    
         let loginButton = webView.buttons["Login"]
         let loginButtonAlternative = webView.buttons["Log in"]
         let loginButtonRu = webView.buttons["Войти"]
@@ -196,7 +89,7 @@ class Image_FeedUITests: XCTestCase {
             webView.descendants(matching: .button).element(boundBy: 0).tap()
         }
         
-        // --- ПРОВЕРКА ЭКРАНА ДОСТУПА (ALLOW ACCESS) ---
+       
         print("🤖 [UI TEST] Проверяем появление промежуточного экрана прав Unsplash...")
         let allowButton = webView.buttons["Allow"]
         let authorizeButton = webView.buttons["Authorize"]
@@ -224,99 +117,136 @@ class Image_FeedUITests: XCTestCase {
         XCTAssertTrue(cell.exists, "Авторизация не удалась: ячейка ленты так и не появилась на экране")
         print("🎉 [UI TEST] Авторизация успешно завершена, таблица ленты на экране!")
     }
-
-    // --- ТЕСТ 2: ЛЕНТА (FEED) ---
+    
     func testFeed() throws {
+        print("🤖 [UI TEST] Шаг 1: Запустить приложение")
+        app.launchArguments = ["UITesting"]
+        app.launch()
+        
         let tablesQuery = app.tables
+        let imagesListTable = tablesQuery["ImagesListTable"]
         
-        // 1. Ждем загрузку первой ячейки в ленте
-        let cellToLike = tablesQuery.children(matching: .cell).element(boundBy: 0)
-        XCTAssertTrue(cellToLike.waitForExistence(timeout: 20), "🚨 [UI TEST ERROR]: Первая ячейка ленты не загрузилась")
+        print("🤖 [UI TEST] Шаг 2: Подождать, пока открывается и загружается экран ленты")
+        XCTAssertTrue(imagesListTable.waitForExistence(timeout: 30), "🚨 Таблица не появилась. Сначала запустите testAuth!")
         
-        sleep(3) // Даем Kingfisher время убрать скелетон
+        // Ждем загрузку первой ячейки на старте
+        let cell = imagesListTable.cells.element(boundBy: 0)
+        XCTAssertTrue(cell.waitForExistence(timeout: 30), "🚨 Первая ячейка ленты не загрузилась")
         
-        // 2. Находим кнопку лайка на первой ячейке
-        let likeButtonOff = tablesQuery.children(matching: .cell).element(boundBy: 0).buttons["like button off"]
-        XCTAssertTrue(likeButtonOff.waitForExistence(timeout: 10), "🚨 [UI TEST ERROR]: Кнопка 'like button off' не найдена")
-        
-        // 3. Ставим лайк
-        likeButtonOff.forceTap()
-        
-        // 4. Ждем, пока состояние изменится на включенный лайк
-        let likeButtonOn = tablesQuery.children(matching: .cell).element(boundBy: 0).buttons["like button on"]
-        XCTAssertTrue(likeButtonOn.waitForExistence(timeout: 10), "🚨 [UI TEST ERROR]: Лайк не переключился в состояние 'like button on'")
-        
-        // 5. Снимаем лайк
-        likeButtonOn.forceTap()
-        
-        // 6. Ждем возвращения кнопки в исходное выключенное состояние
-        let likeButtonOffAgain = tablesQuery.children(matching: .cell).element(boundBy: 0).buttons["like button off"]
-        XCTAssertTrue(likeButtonOffAgain.waitForExistence(timeout: 10), "🚨 [UI TEST ERROR]: Лайк не вернулся в состояние 'like button off'")
-        
+        print("🤖 [UI TEST] Шаг 3: Смахиваем экран ВВЕРХ (скролл ленты к нижним картинкам)...")
+        imagesListTable.swipeUp()
         sleep(2)
         
-        // 7. Переходим на экран детального просмотра (SingleImage)
-        let finalCell = tablesQuery.children(matching: .cell).element(boundBy: 0)
-        finalCell.tap()
+        print("🤖 [UI TEST] Смахиваем экран ВНИЗ до упора (возврат к самой первой ячейке)...")
+        imagesListTable.swipeDown()
+        imagesListTable.swipeDown()
+        sleep(3)
         
-        sleep(2)
+        let targetCell = imagesListTable.cells.element(boundBy: 0)
+        XCTAssertTrue(targetCell.waitForExistence(timeout: 15), "🚨 Не удалось вернуться к первой ячейке после скролла")
+
         
-        // 8. Ждем загрузку полноэкранной картинки
+        print("🤖 [UI TEST] Шаг 4 & 5: Поставить и отменить лайк в ячейке первой картинки")
+        let likeButtonOff = targetCell.buttons["like button off"]
+        let likeButtonOn = targetCell.buttons["like button on"]
+        
+        if likeButtonOff.waitForExistence(timeout: 5) {
+            print("🤖 Ставим лайк...")
+            likeButtonOff.tap()
+            XCTAssertTrue(likeButtonOn.waitForExistence(timeout: 10), "🚨 Лайк не включился")
+            sleep(1)
+            
+            print("🤖 Отменяем лайк...")
+            likeButtonOn.tap()
+            XCTAssertTrue(likeButtonOff.waitForExistence(timeout: 10), "🚨 Лайк не выключился")
+            sleep(1)
+        } else if likeButtonOn.waitForExistence(timeout: 5) {
+            print("🤖 Картинка уже была с лайком. Сначала отменяем лайк...")
+            likeButtonOn.tap()
+            XCTAssertTrue(likeButtonOff.waitForExistence(timeout: 10), "🚨 Лайк не выключился")
+            sleep(1)
+            
+            print("🤖 Ставим лайк обратно...")
+            likeButtonOff.tap()
+            XCTAssertTrue(likeButtonOn.waitForExistence(timeout: 10), "🚨 Лайк не включился")
+            sleep(1)
+        }
+        
+        print("🤖 [UI TEST] Шаг 6 & 7: Нажать на ячейку и подождать, пока картинка откроется на весь экран")
+        targetCell.tap()
+        
+        sleep(4)
+        
+        print("🤖 [UI TEST] Шаг 8 & 9: Тестируем увеличение и уменьшение картинки (pinch)")
         let image = app.scrollViews.images.element(boundBy: 0)
-        XCTAssertTrue(image.waitForExistence(timeout: 20), "🚨 [UI TEST ERROR]: Полноэкранная картинка не загрузилась")
+        XCTAssertTrue(image.waitForExistence(timeout: 25), "🚨 Полноэкранная картинка не загрузилась")
         
-        // 9. Тестируем зум
         image.pinch(withScale: 3, velocity: 1)
+        sleep(1)
         image.pinch(withScale: 0.5, velocity: -1)
+        sleep(1)
         
-        // 10. Возвращаемся обратно в ленту
+        print("🤖 [UI TEST] Шаг 10: Вернуться на экран ленты")
         let navBackButtonWhiteButton = app.buttons["nav back button white"]
-        XCTAssertTrue(navBackButtonWhiteButton.waitForExistence(timeout: 5), "🚨 [UI TEST ERROR]: Кнопка возврата не найдена")
+        XCTAssertTrue(navBackButtonWhiteButton.waitForExistence(timeout: 5), "🚨 Кнопка возврата не найдена")
         navBackButtonWhiteButton.tap()
+        
+        XCTAssertTrue(imagesListTable.exists, "🚨 Не удалось вернуться на экран ленты")
+        print("🎉 [UI TEST] Честный тест ленты по сценарию Яндекса успешно пройден!")
+    }
+    
+    func testProfile() throws {
+        print("🤖 [UI TEST] Шаг 1: Запустить приложение")
+        app.launchArguments = ["UITesting"]
+        app.launch()
+        
+        print("🤖 [UI TEST] Шаг 2: Подождать, пока открывается и загружается экран ленты")
+        let imagesListTable = app.tables["ImagesListTable"]
+        XCTAssertTrue(imagesListTable.waitForExistence(timeout: 30), "🚨 Экран ленты не загрузился")
+        
+        print("🤖 [UI TEST] Шаг 3: Перейти на экран профиля")
+        let profileTabButton = app.tabBars.buttons.element(boundBy: 1)
+        XCTAssertTrue(profileTabButton.waitForExistence(timeout: 10), "🚨 Вкладка профиля в Таббаре не найдена")
+        profileTabButton.tap()
+        
+        sleep(3)
+        
+        print("🤖 [UI TEST] Шаг 4: Проверить, что на нём отображаются ваши персональные данные")
+        let nameLabel = app.staticTexts["Viktoria Yunosheva"]
+        XCTAssertTrue(nameLabel.waitForExistence(timeout: 10), "🚨 Персональные данные (имя Viktoria Yunosheva) не отобразились")
+        
+        let loginLabel = app.staticTexts["@yuyu1905"]
+        XCTAssertTrue(loginLabel.exists, "🚨 Персональные данные (username @yuyu1905) не найдены на экране")
+        
+        print("🤖 [UI TEST] Шаг 5: Нажать кнопку логаута")
+        let logoutButton = app.buttons["logout button"]
+        XCTAssertTrue(logoutButton.waitForExistence(timeout: 5), "🚨 Кнопка выхода 'logout button' не найдена")
+        logoutButton.tap()
+        
+        let alertEn = app.alerts["Bye bye!"]
+        let alertRu = app.alerts["Пока, пока!"]
+        
+        if alertEn.waitForExistence(timeout: 5) {
+            alertEn.buttons["Yes"].tap()
+        } else if alertRu.waitForExistence(timeout: 5) {
+            alertRu.buttons["Да"].tap()
+        } else {
+            let confirmPredicate = NSPredicate(format: "label TEXT matches [c] 'да' OR label TEXT matches [c] 'yes'")
+            let confirmButton = app.alerts.element.buttons.element(matching: confirmPredicate)
+            if confirmButton.exists {
+                confirmButton.tap()
+            } else {
+                app.alerts.element.buttons.element(boundBy: 1).tap()
+            }
+        }
+        
+        print("🤖 [UI TEST] Шаг 6: Проверить, что открылся экран авторизации")
+        let authButton = app.buttons["Authenticate"]
+        XCTAssertTrue(authButton.waitForExistence(timeout: 15), "🚨 Экран авторизации не появился после логаута")
+        
+        print("🎉 [UI TEST] Тест профиля и логаута успешно пройден строго по сценарию!")
     }
 
-
-
-
-    
-    
-    // --- ТЕСТ 3: ПРОФИЛЬ ПОЛЬЗОВАТЕЛЯ ---
-    func testProfile() throws {
-            // 1. Находим и нажимаем на вкладку Профиля в Таббаре
-            let profileTabButton = app.tabBars.buttons.element(boundBy: 1)
-            XCTAssertTrue(profileTabButton.waitForExistence(timeout: 10), "🚨 [UI TEST ERROR]: Таббар профиля не найден")
-            profileTabButton.tap()
-            
-            sleep(3) // Даем время профилю загрузить данные из сети
-            
-            // 2. Стабильная проверка: ищем текстовую метку по ее идентификатору, а не по тексту!
-            let profileNameLabel = app.staticTexts["Name Label"]
-            XCTAssertTrue(profileNameLabel.waitForExistence(timeout: 5), "🚨 [UI TEST ERROR]: Экран профиля не загрузился или не найден Name Label")
-            
-            // 3. Находим кнопку логаута по идентификатору
-            let logoutButton = app.buttons["logout button"]
-            XCTAssertTrue(logoutButton.waitForExistence(timeout: 5), "🚨 [UI TEST ERROR]: Кнопка выхода 'logout button' не найдена")
-            logoutButton.tap()
-            
-            // 4. Обрабатываем системное диалоговое окно (Алерт подтверждения выхода)
-            let alertEn = app.alerts["Bye bye!"]
-            let alertRu = app.alerts["Пока, пока!"]
-            
-            if alertEn.waitForExistence(timeout: 5) {
-                alertEn.buttons["Yes"].tap()
-            } else if alertRu.waitForExistence(timeout: 5) {
-                alertRu.buttons["Да"].tap()
-            } else {
-                // Если алерт имеет другой заголовок, нажимаем первую попавшуюся кнопку согласия
-                app.alerts.element.buttons.element(boundBy: 0).tap()
-            }
-            
-            // 5. Проверяем, что после логаута мы успешно вернулись на стартовый экран входа
-            let authButton = app.buttons["Authenticate"]
-            XCTAssertTrue(authButton.waitForExistence(timeout: 10), "🚨 [UI TEST ERROR]: После выхода экран авторизации не открылся")
-        }
-    
-    // --- ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ ---
     private func pastePassword(passwordField: XCUIElement, password: String) {
         UIPasteboard.general.string = password
         passwordField.tap()

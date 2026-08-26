@@ -30,11 +30,7 @@ final class ImagesListCell: UITableViewCell {
     func setIsLiked(isLiked: Bool) {
         let imageName = isLiked ? "like_button_on" : "like_button_off"
         likeButton.setImage(UIImage(named: imageName), for: .normal)
-        
-        // 1. Обязательно разрешаем системе тестирования видеть эту кнопку
         likeButton.isAccessibilityElement = true
-        
-        // 2. Строгое соответствие текстовым именам в UI-тесте (БЕЗ нижних подчеркиваний!)
         likeButton.accessibilityIdentifier = isLiked ? "like button on" : "like button off"
     }
 }

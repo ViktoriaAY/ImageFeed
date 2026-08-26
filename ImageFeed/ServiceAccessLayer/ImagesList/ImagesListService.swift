@@ -51,9 +51,6 @@ final class ImagesListService {
     // MARK: - Public Methods
     func changeLike(photoId: String, isLike: Bool, _ completion: @escaping (Result<Void, Error>) -> Void) {
         assert(Thread.isMainThread)
-        
-        // 1. Используем отдельный таск для лайков, чтобы пагинация ленты его не отменяла!
-        // (Убедитесь, что вы добавили private var changeLikeTask: URLSessionTask? в свойства класса)
         changeLikeTask?.cancel()
         
         let urlString = "\(Constants.defaultBaseURLString)/photos/\(photoId)/like"
@@ -64,8 +61,6 @@ final class ImagesListService {
         
         var request = URLRequest(url: url)
         request.httpMethod = isLike ? "POST" : "DELETE"
-        
-        // 2. Берем токен из хранилища
         if let token = tokenStorage.token {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
             logger.log("[ImagesListService]: Отправка лайка с токеном. Метод: \(request.httpMethod ?? "")")
@@ -84,7 +79,6 @@ final class ImagesListService {
                 
                 switch result {
                 case .success(let response):
-                    // Ищем фото в локальном массиве и обновляем его статус
                     if let index = self.photos.firstIndex(where: { $0.id == photoId }) {
                         let newPhoto = Photo(from: response.photo, dateFormatter: self.dateFormatter)
                         self.photos = self.photos.withReplaced(itemAt: index, newValue: newPhoto)
@@ -107,7 +101,6 @@ final class ImagesListService {
     
     func fetchPhotosNextPage() {
            assert(Thread.isMainThread)
-           // 1. Проверяем только задачу загрузки страниц, чтобы лайки её не блокировали
            guard fetchPhotosTask == nil else { return }
            
            let nextPage = (lastLoadedPage ?? 0) + 1
@@ -157,11 +150,9 @@ final class ImagesListService {
                    case .failure(let error):
                        self.logger.error("[ImagesListService]: Ошибка загрузки страницы \(nextPage) - \(error.localizedDescription)")
                    }
-                   // 2. Обнуляем именно fetchPhotosTask по завершении запроса
                    self.fetchPhotosTask = nil
                }
            }
-           // 3. Сохраняем таск в правильное свойство класса и запускаем
            self.fetchPhotosTask = task
            task.resume()
        }
@@ -169,12 +160,8 @@ final class ImagesListService {
     func clean() {
             photos = []
             lastLoadedPage = nil
-            
-            // Отменяем и очищаем задачу загрузки страниц ленты
             fetchPhotosTask?.cancel()
             fetchPhotosTask = nil
-            
-            // Отменяем и очищаем задачу установки лайков
             changeLikeTask?.cancel()
             changeLikeTask = nil
         }

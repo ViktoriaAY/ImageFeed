@@ -87,8 +87,6 @@ final class ProfileViewController: UIViewController, ProfileViewControllerProtoc
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
-        
-        // Передаем полное управление презентеру. Старый код проверок отсюда удален.
         presenter?.viewDidLoad()
     }
     
@@ -103,8 +101,6 @@ final class ProfileViewController: UIViewController, ProfileViewControllerProtoc
         nameLabel.text = name
         loginNameLabel.text = nickname
         descriptionLabel.text = bio
-        
-        // ВАЖНО: Присваиваем ID повторно ПОСЛЕ того, как текст обновился живыми данными из сети!
         nameLabel.accessibilityIdentifier = "Name Label"
     }
     
@@ -141,21 +137,15 @@ final class ProfileViewController: UIViewController, ProfileViewControllerProtoc
     
     func switchToSplashViewController() {
             DispatchQueue.main.async {
-                // 1. Находим главное окно приложения
                 guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
                       let sceneDelegate = windowScene.delegate as? SceneDelegate,
                       let window = sceneDelegate.window else { return }
-                
-                // 2. Создаем навигационный контроллер экрана авторизации из Storyboard
                 let storyboard = UIStoryboard(name: "Main", bundle: nil)
                 guard let authNC = storyboard.instantiateViewController(withIdentifier: "AuthNavigationController") as? UINavigationController else {
                     assertionFailure("Не удалось найти AuthNavigationController в Storyboard")
                     return
                 }
                 
-                // Блок установки делегата удален, так как для UI-теста выхода он не требуется!
-                
-                // 3. Жестко меняем корневой контроллер окна на экран входа с красивой плавной анимацией
                 window.rootViewController = authNC
                 
                 UIView.transition(

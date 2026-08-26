@@ -53,26 +53,23 @@ final class ImagesListViewController: UIViewController, ImagesListViewController
     
     // MARK: - ImagesListViewControllerProtocol
     func updateTableViewAnimated(oldCount: Int, newCount: Int) {
-            // Запрашиваем реальное количество строк, которое таблица отображает прямо сейчас
-            let currentRowsCount = tableView.numberOfRows(inSection: 0)
-            
-            print("🍏 [VIEW LOG]: Обновление таблицы. Строк в UI сейчас: \(currentRowsCount), должно стать: \(newCount)")
-            
-            if currentRowsCount != newCount {
-                tableView.performBatchUpdates {
-                    let indexPaths = (currentRowsCount..<newCount).map { i in
-                        IndexPath(row: i, section: 0)
-                    }
-                    tableView.insertRows(at: indexPaths, with: .automatic)
-                } completion: { _ in }
-            }
+        let currentRowsCount = tableView.numberOfRows(inSection: 0)
+        
+        print("🍏 [VIEW LOG]: Обновление таблицы. Строк в UI сейчас: \(currentRowsCount), должно стать: \(newCount)")
+        
+        if currentRowsCount != newCount {
+            tableView.performBatchUpdates {
+                let indexPaths = (currentRowsCount..<newCount).map { i in
+                    IndexPath(row: i, section: 0)
+                }
+                tableView.insertRows(at: indexPaths, with: .automatic)
+            } completion: { _ in }
         }
+    }
     
     func setCellLiked(at indexPath: IndexPath, isLiked: Bool) {
-           // Принудительно перезагружаем только одну строку ячейки.
-           // Это гарантирует 100% синхронизацию модели данных с UI слоя.
-           tableView.reloadRows(at: [indexPath], with: .none)
-       }
+        tableView.reloadRows(at: [indexPath], with: .none)
+    }
     
     func showLikeErrorAlert() {
         let alert = UIAlertController(
@@ -89,7 +86,6 @@ final class ImagesListViewController: UIViewController, ImagesListViewController
         tableView.delegate = self
         tableView.dataSource = self
         
-        // Возвращаем стандартные системные отступы
         tableView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: 12, right: 0)
         tableView.accessibilityIdentifier = "ImagesListTable"
     }
@@ -119,7 +115,7 @@ extension DateFormatter {
         formatter.locale = Locale(identifier: "ru_RU")
         formatter.dateFormat = "d MMMM yyyy"
         return formatter
-    } ()
+    }()
 }
 
 // MARK: - UITableViewDelegate
@@ -129,8 +125,17 @@ extension ImagesListViewController: UITableViewDelegate {
     }
     
     func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
-        presenter?.fetchPhotosNextPageIfNeeded(by: indexPath)
+        // Блокируем пагинацию, если запущен ЛЮБОЙ UI-тест
+        if CommandLine.arguments.contains("UITesting") {
+            print("[ImagesList]: Режим тестирования. Пагинация заблокирована.")
+            return
+        }
+        
+        if indexPath.row + 1 == presenter?.photos.count {
+            ImagesListService.shared.fetchPhotosNextPage()
+        }
     }
+
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         return presenter?.calculateCellHeight(for: indexPath, tableViewWidth: tableView.bounds.width) ?? 0
@@ -149,7 +154,6 @@ extension ImagesListViewController: UITableViewDataSource {
         imageListCell.delegate = self
         configCell(for: imageListCell, with: indexPath)
         
-        // ДОБАВЛЕНО ДЛЯ UI-ТЕСТОВ: Каждая ячейка получает свое уникальное имя
         imageListCell.accessibilityIdentifier = "ImagesListCell"
         
         return imageListCell
